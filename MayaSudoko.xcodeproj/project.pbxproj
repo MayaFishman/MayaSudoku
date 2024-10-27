@@ -15,6 +15,8 @@
 		3C5E4FF02CCCDFC200668FBD /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 3C5E4FEE2CCCDFC200668FBD /* Main.storyboard */; };
 		3C5E4FF22CCCDFC500668FBD /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3C5E4FF12CCCDFC500668FBD /* Assets.xcassets */; };
 		3C5E4FF52CCCDFC500668FBD /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 3C5E4FF32CCCDFC500668FBD /* LaunchScreen.storyboard */; };
+		3C5E4FFC2CCCE1AF00668FBD /* MainMenuScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C5E4FFB2CCCE1AF00668FBD /* MainMenuScene.swift */; };
+		3C5E50002CCD04F400668FBD /* SudokoScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C5E4FFF2CCD04F400668FBD /* SudokoScene.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -27,6 +29,8 @@
 		3C5E4FEF2CCCDFC200668FBD /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		3C5E4FF12CCCDFC500668FBD /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		3C5E4FF42CCCDFC500668FBD /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		3C5E4FFB2CCCE1AF00668FBD /* MainMenuScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainMenuScene.swift; sourceTree = "<group>"; };
+		3C5E4FFF2CCD04F400668FBD /* SudokoScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SudokoScene.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -67,6 +71,8 @@
 				3C5E4FEE2CCCDFC200668FBD /* Main.storyboard */,
 				3C5E4FF12CCCDFC500668FBD /* Assets.xcassets */,
 				3C5E4FF32CCCDFC500668FBD /* LaunchScreen.storyboard */,
+				3C5E4FFB2CCCE1AF00668FBD /* MainMenuScene.swift */,
+				3C5E4FFF2CCD04F400668FBD /* SudokoScene.swift */,
 			);
 			path = MayaSudoko;
 			sourceTree = "<group>";
@@ -147,6 +153,8 @@
 				3C5E4FEB2CCCDFC200668FBD /* GameScene.swift in Sources */,
 				3C5E4FED2CCCDFC200668FBD /* GameViewController.swift in Sources */,
 				3C5E4FE52CCCDFC100668FBD /* AppDelegate.swift in Sources */,
+				3C5E50002CCD04F400668FBD /* SudokoScene.swift in Sources */,
+				3C5E4FFC2CCCE1AF00668FBD /* MainMenuScene.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
