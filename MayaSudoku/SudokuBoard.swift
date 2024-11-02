@@ -150,6 +150,9 @@ class SudokuBoard {
         }
         return false
     }
+    func isSolved() -> Bool {
+        return solvedBoard == unsolvedBoard
+    }
 }
 
 

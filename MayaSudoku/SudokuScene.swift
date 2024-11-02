@@ -6,6 +6,13 @@ class SudokuScene: SKScene {
     private var selectedCell: SKShapeNode?
     private var gridSize: CGFloat = 0.0
     private var board: SudokuBoard?
+    private var timerLabel: SKLabelNode!
+    private var mistakesLabel: SKLabelNode!
+    private var timer: Timer?
+    private var elapsedTime: Int = 0
+    private var mistakes: Int = 0
+    private var quitButton: SKSpriteNode!
+    private var quitLabel: SKLabelNode! // Quit label
     
     override func didMove(to view: SKView) {
         gridSize = min(size.width, size.height) * 1
@@ -44,6 +51,55 @@ class SudokuScene: SKScene {
                             self.drawSudokuGrid()
                             self.drawNumberCells()
                             self.drawSudokuBoard()
+                            
+                            gridSize = min(size.width, size.height) * 1
+                            
+                            // Calculate positions for the timer and mistakes labels based on screen width
+                            let screenWidth = size.width
+                            let screenHeight = size.height
+                            let gridOrigin = CGPoint(x: (screenWidth - gridSize) / 2, y: (screenHeight - gridSize) / 2)
+                            
+                            // Calculate left and right positions for the labels
+                            let leftPosition = CGPoint(x: screenWidth / 4, y: gridOrigin.y + gridSize + 20)
+                            let rightPosition = CGPoint(x: 3 * screenWidth / 4, y: gridOrigin.y + gridSize + 20)
+                            
+                            // Initialize and position timer label on the left side of the screen
+                            timerLabel = SKLabelNode(text: "Time: 00:00")
+                            timerLabel.fontName = "AvenirNext"
+                            timerLabel.fontSize = 20
+                            timerLabel.fontColor = .blue
+                            timerLabel.position = leftPosition // Set to left half
+                            timerLabel.zPosition = 10
+                            addChild(timerLabel)
+                            
+                            // Initialize and position mistakes label on the right side of the screen
+                            mistakesLabel = SKLabelNode(text: "Mistakes: 0")
+                            mistakesLabel.fontName = "AvenirNext"
+                            mistakesLabel.fontSize = 20
+                            mistakesLabel.fontColor = .red
+                            mistakesLabel.position = rightPosition // Set to right half
+                            mistakesLabel.zPosition = 10
+                            addChild(mistakesLabel)
+                            
+                            let buttonWidth: CGFloat = 80
+                            let buttonHeight: CGFloat = 40
+                            quitButton = SKSpriteNode(color: .magenta, size: CGSize(width: buttonWidth, height: buttonHeight))
+                            quitButton.position = CGPoint(x: leftPosition.x, y: leftPosition.y + 50) // Above timer
+                            quitButton.zPosition = 10
+                            quitButton.name = "quitButton" // Name for touch detection
+                            addChild(quitButton)
+                            
+                            // Quit label setup
+                            quitLabel = SKLabelNode(text: "Quit")
+                            quitLabel.fontName = "AvenirNext"
+                            quitLabel.fontSize = 20
+                            quitLabel.fontColor = .white
+                            quitLabel.position = CGPoint(x: 0, y: -4) // Centered within the button
+                            quitLabel.name = "quitButton"
+                            quitButton.addChild(quitLabel)
+                            
+                            // Start timer
+                            startTimer()
                         }
                     ])
                     
@@ -53,7 +109,16 @@ class SudokuScene: SKScene {
             }
         }
     }
-
+    private func startTimer() {
+        timer = Timer.scheduledTimer(timeInterval: 1.0, target: self, selector: #selector(updateTimer), userInfo: nil, repeats: true)
+    }
+    
+    @objc private func updateTimer() {
+        elapsedTime += 1
+        let minutes = elapsedTime / 60
+        let seconds = elapsedTime % 60
+        timerLabel.text = String(format: "Time: %02d:%02d", minutes, seconds)
+    }
     private func drawSudokuBoardCell(index: Int, value: Int) {
         let row = index / 9
         let col = index % 9
@@ -65,7 +130,7 @@ class SudokuScene: SKScene {
             x: gridOrigin.x + CGFloat(col) * cellSize + cellSize / 2,
             y: gridOrigin.y + CGFloat(row) * cellSize + cellSize / 2
         )
-
+        
         let cell = atPoint(cellPosition)
         
         // If the cell contains a non-zero value, display it
@@ -86,13 +151,12 @@ class SudokuScene: SKScene {
     
     private func drawSudokuBoard() {
         guard let boardValues = board?.getUnsolved() else { return }
-        print(boardValues)
         
         for (index, value) in boardValues.enumerated() {
             drawSudokuBoardCell(index: index, value: value)
         }
     }
-
+    
     
     private func drawSudokuGrid() {
         // Size and position of the grid
@@ -145,7 +209,7 @@ class SudokuScene: SKScene {
         let bottomOffset = gridOrigin.y - cellSize * 2.5 // Space below the grid for number cells
         
         let startX = (size.width - gridSize) / 2 + cellSize / 2
-
+        
         // Create number cells from 1 to 9
         for i in 1...9 {
             let numberCell = SKShapeNode(rectOf: CGSize(width: cellSize - 2, height: cellSize - 2), cornerRadius: 4)
@@ -154,7 +218,7 @@ class SudokuScene: SKScene {
             numberCell.strokeColor = .gray
             numberCell.zPosition = 1
             numberCell.name = "numberCell_\(i)" // Name for identification
-
+            
             // Add label with number
             let numberLabel = SKLabelNode(text: "\(i)")
             numberLabel.fontName = "AvenirNext"
@@ -189,7 +253,13 @@ class SudokuScene: SKScene {
             }
         }
     }
-
+    private func checkIfGameCompleted() {
+        if board!.isSolved() {
+            timer?.invalidate()
+            print("Game Completed!")
+        }
+    }
+    
     func cellToIndex(cell: SKShapeNode) -> Int {
         let parts = cell.name!.components(separatedBy: "_")
         if parts.count == 3, let row = Int(parts[1]), let col = Int(parts[2]) {
@@ -203,19 +273,24 @@ class SudokuScene: SKScene {
         
         let location = touch.location(in: self)
         var touchedNode = atPoint(location)
-        guard var boardValues = board?.getUnsolved() else { return }
-        guard let solvedValue = board?.getSolved() else { return }
-            
+        
+        if touchedNode.name == "quitButton" {
+            handleQuitButton()
+            return
+        }
+        
         // Traverse up to find the top-level cell node
         while let parentNode = touchedNode.parent, !(touchedNode is SKShapeNode && touchedNode.name?.starts(with: "cell_") == true || touchedNode.name?.starts(with: "numberCell_") == true ) {
             touchedNode = parentNode
         }
         
+        guard let boardValues = board?.getUnsolved() else { return }
+        
         // Check if the touched node is a cell
         if let cell = touchedNode as? SKShapeNode, cell.name?.starts(with: "cell_") == true {
-        
+            
             clearCells()
-
+            
             let index = cellToIndex(cell: cell)
             if index == -1 {
                 return
@@ -244,10 +319,28 @@ class SudokuScene: SKScene {
                     if board!.setValue(index: index, val: val) {
                         print("great success!")
                         drawSudokuBoardCell(index: index, value: val)
+                    } else {
+                        // If incorrect, increment mistakes
+                        mistakes += 1
+                        mistakesLabel.text = "Mistakes: \(mistakes)"
+                        
+                        // Optional: add a visual effect to indicate a mistake (e.g., cell flash or shake)
+                        let shake = SKAction.sequence([SKAction.scale(to: 1.1, duration: 0.1), SKAction.scale(to: 1.0, duration: 0.1)])
+                        selectedCell?.run(shake)
+                        
                     }
                 }
             }
         }
+    }
+    
+    private func handleQuitButton() {
+        // Logic to handle quit action, e.g., transitioning to a main menu scene
+        print("Quit button pressed.")
+        
+        let transition = SKTransition.fade(withDuration: 0.5)
+        let mainMenuScene = MainMenuScene(size: self.size)
+        self.view?.presentScene(mainMenuScene, transition: transition)
     }
 }
 
