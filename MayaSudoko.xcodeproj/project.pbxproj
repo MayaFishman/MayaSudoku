@@ -18,6 +18,7 @@
 		3C5E4FFC2CCCE1AF00668FBD /* MainMenuScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C5E4FFB2CCCE1AF00668FBD /* MainMenuScene.swift */; };
 		3C5E50002CCD04F400668FBD /* SudokuScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C5E4FFF2CCD04F400668FBD /* SudokuScene.swift */; };
 		3C5E50022CD61D1500668FBD /* SudokuBoard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C5E50012CD61D1500668FBD /* SudokuBoard.swift */; };
+		3C5E50042CD6251D00668FBD /* WaitingScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C5E50032CD6251D00668FBD /* WaitingScene.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -33,6 +34,7 @@
 		3C5E4FFB2CCCE1AF00668FBD /* MainMenuScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainMenuScene.swift; sourceTree = "<group>"; };
 		3C5E4FFF2CCD04F400668FBD /* SudokuScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SudokuScene.swift; sourceTree = "<group>"; };
 		3C5E50012CD61D1500668FBD /* SudokuBoard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SudokuBoard.swift; sourceTree = "<group>"; };
+		3C5E50032CD6251D00668FBD /* WaitingScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaitingScene.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -76,6 +78,7 @@
 				3C5E4FFB2CCCE1AF00668FBD /* MainMenuScene.swift */,
 				3C5E4FFF2CCD04F400668FBD /* SudokuScene.swift */,
 				3C5E50012CD61D1500668FBD /* SudokuBoard.swift */,
+				3C5E50032CD6251D00668FBD /* WaitingScene.swift */,
 			);
 			path = MayaSudoku;
 			sourceTree = "<group>";
@@ -153,6 +156,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3C5E50042CD6251D00668FBD /* WaitingScene.swift in Sources */,
 				3C5E4FEB2CCCDFC200668FBD /* GameScene.swift in Sources */,
 				3C5E4FED2CCCDFC200668FBD /* GameViewController.swift in Sources */,
 				3C5E50022CD61D1500668FBD /* SudokuBoard.swift in Sources */,

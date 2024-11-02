@@ -142,6 +142,14 @@ class SudokuBoard {
     static func countPieces(_ board: [Int]) -> Int {
         return board.filter { $0 != 0 }.count
     }
+    
+    func setValue(index: Int, val: Int) -> Bool{
+        if solvedBoard[index] == val {
+            unsolvedBoard[index] = val
+            return true
+        }
+        return false
+    }
 }
 
 

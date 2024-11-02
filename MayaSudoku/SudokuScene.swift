@@ -8,45 +8,88 @@ class SudokuScene: SKScene {
     private var board: SudokuBoard?
     
     override func didMove(to view: SKView) {
-        backgroundColor = .white
         gridSize = min(size.width, size.height) * 1
-        board = SudokuBoard()
-        board?.generate(difficulty: SudokuBoard.Difficulty.veryHard)
         
-        drawSudokuGrid()
-        drawNumberCells()
-        drawSudokuBoard()
+        // Create a white background node and add it at the lowest zPosition
+        let backgroundNode = SKSpriteNode(color: .white, size: self.size)
+        backgroundNode.position = CGPoint(x: size.width / 2, y: size.height / 2)
+        backgroundNode.zPosition = -1
+        addChild(backgroundNode)
+        
+        // Create and add WaitingAnimationNode as an overlay
+        let waitingAnimation = WaitingAnimationNode()
+        waitingAnimation.position = CGPoint(x: size.width / 2, y: size.height / 2)
+        waitingAnimation.name = "waitingAnimation" // Set a name for easy removal
+        addChild(waitingAnimation)
+        
+        // Generate the Sudoku board asynchronously
+        DispatchQueue.global(qos: .userInitiated).async {
+            self.board = SudokuBoard()
+            self.board?.generate(difficulty: SudokuBoard.Difficulty.veryHard)
+            
+            // Return to the main thread to handle the fade-out and UI update
+            DispatchQueue.main.async {
+                if let waitingAnimation = self.childNode(withName: "waitingAnimation") {
+                    // Create the fade-out and remove actions
+                    let fadeOut = SKAction.fadeOut(withDuration: 0.5)
+                    let remove = SKAction.removeFromParent()
+                    
+                    // Sequence that fades out and removes the waiting animation, then draws the board
+                    let fadeOutAndRemove = SKAction.sequence([
+                        fadeOut,
+                        remove,
+                        SKAction.run { [weak self] in
+                            guard let self = self else { return }
+                            // Draw the grid, number cells, and the Sudoku board after fade-out completes
+                            self.drawSudokuGrid()
+                            self.drawNumberCells()
+                            self.drawSudokuBoard()
+                        }
+                    ])
+                    
+                    // Run the fade-out and remove sequence
+                    waitingAnimation.run(fadeOutAndRemove)
+                }
+            }
+        }
     }
-    
-    private func drawSudokuBoard() {
-        guard let boardValues = board?.getUnsolved() else { return }
-        
+
+    private func drawSudokuBoardCell(index: Int, value: Int) {
+        let row = index / 9
+        let col = index % 9
         let cellSize = gridSize / 9.0
         let gridOrigin = CGPoint(x: (size.width - gridSize) / 2, y: (size.height - gridSize) / 2)
         
+        // Calculate the position of the cell
+        let cellPosition = CGPoint(
+            x: gridOrigin.x + CGFloat(col) * cellSize + cellSize / 2,
+            y: gridOrigin.y + CGFloat(row) * cellSize + cellSize / 2
+        )
+
+        let cell = atPoint(cellPosition)
+        
+        // If the cell contains a non-zero value, display it
+        if value != 0 {
+            let numberLabel = SKLabelNode(text: "\(value)")
+            numberLabel.fontName = "AvenirNext"
+            numberLabel.fontSize = 24
+            numberLabel.fontColor = .black
+            numberLabel.verticalAlignmentMode = .center
+            numberLabel.horizontalAlignmentMode = .center
+            numberLabel.position = CGPoint(x:0, y:0)
+            numberLabel.zPosition = 2 // Above the cell background
+            
+            cell.addChild(numberLabel)
+        }
+    }
+    
+    
+    private func drawSudokuBoard() {
+        guard let boardValues = board?.getUnsolved() else { return }
+        print(boardValues)
+        
         for (index, value) in boardValues.enumerated() {
-            let row = index / 9
-            let col = index % 9
-            
-            // Calculate the position of the cell
-            let cellPosition = CGPoint(
-                x: gridOrigin.x + CGFloat(col) * cellSize + cellSize / 2,
-                y: gridOrigin.y + CGFloat(row) * cellSize + cellSize / 2
-            )
-            
-            // If the cell contains a non-zero value, display it
-            if value != 0 {
-                let numberLabel = SKLabelNode(text: "\(value)")
-                numberLabel.fontName = "AvenirNext-Bold"
-                numberLabel.fontSize = 24
-                numberLabel.fontColor = .black
-                numberLabel.verticalAlignmentMode = .center
-                numberLabel.horizontalAlignmentMode = .center
-                numberLabel.position = cellPosition
-                numberLabel.zPosition = 2 // Above the cell background
-                
-                addChild(numberLabel)
-            }
+            drawSudokuBoardCell(index: index, value: value)
         }
     }
 
@@ -114,8 +157,8 @@ class SudokuScene: SKScene {
 
             // Add label with number
             let numberLabel = SKLabelNode(text: "\(i)")
-            numberLabel.fontName = "AvenirNext-Bold"
-            numberLabel.fontSize = 20
+            numberLabel.fontName = "AvenirNext"
+            numberLabel.fontSize = 24
             numberLabel.fontColor = .black
             numberLabel.verticalAlignmentMode = .center
             numberLabel.horizontalAlignmentMode = .center
@@ -126,11 +169,42 @@ class SudokuScene: SKScene {
         }
     }
     
+    func clearCells() {
+        // Clear any previous highlights
+        for child in children {
+            if let cell = child as? SKShapeNode, cell.name?.starts(with: "cell_") == true {
+                cell.fillColor = .white // Reset color to default
+            }
+        }
+    }
+    
+    func highlightCellsWithVal(val: Int) {
+        // Highlight cells with the specified value
+        for child in children {
+            if let cell = child as? SKShapeNode, cell.name?.starts(with: "cell_") == true {
+                // Check if the cell contains the specified value
+                if let label = cell.children.first as? SKLabelNode, label.text == "\(val)" {
+                    cell.fillColor = SKColor(red: 0.7, green: 0.85, blue: 1.0, alpha: 1.0) // Highlight color
+                }
+            }
+        }
+    }
+
+    func cellToIndex(cell: SKShapeNode) -> Int {
+        let parts = cell.name!.components(separatedBy: "_")
+        if parts.count == 3, let row = Int(parts[1]), let col = Int(parts[2]) {
+            return row * 9 + col
+        }
+        return -1
+    }
+    
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         guard let touch = touches.first else { return }
         
         let location = touch.location(in: self)
         var touchedNode = atPoint(location)
+        guard var boardValues = board?.getUnsolved() else { return }
+        guard let solvedValue = board?.getSolved() else { return }
             
         // Traverse up to find the top-level cell node
         while let parentNode = touchedNode.parent, !(touchedNode is SKShapeNode && touchedNode.name?.starts(with: "cell_") == true || touchedNode.name?.starts(with: "numberCell_") == true ) {
@@ -139,17 +213,40 @@ class SudokuScene: SKScene {
         
         // Check if the touched node is a cell
         if let cell = touchedNode as? SKShapeNode, cell.name?.starts(with: "cell_") == true {
-            
-            // Deselect the previously selected cell
-            selectedCell?.fillColor = .white
-            
-            // Select the new cell and change its color to blue
-            cell.fillColor = SKColor(red: 0.7, green: 0.85, blue: 1.0, alpha: 1.0) // Light pastel blue color
-            selectedCell = cell
+        
+            clearCells()
+
+            let index = cellToIndex(cell: cell)
+            if index == -1 {
+                return
+            }
+            if boardValues[index] == 0 {
+                // Select the new cell and change its color to blue
+                cell.fillColor = SKColor(red: 0.7, green: 0.85, blue: 1.0, alpha: 1.0) // Light pastel blue color
+                selectedCell = cell
+                print(cell.name!)
+            } else {
+                selectedCell = nil
+                highlightCellsWithVal(val: boardValues[index])
+            }
         }
         
         if let cell = touchedNode as? SKShapeNode, let name = cell.name, name.starts(with: "numberCell_") {
             print(name)
+            let parts = cell.name!.components(separatedBy: "_")
+            if parts.count == 2, let val = Int(parts[1]) {
+                if selectedCell != nil {
+                    let index = cellToIndex(cell: selectedCell!)
+                    if index == -1 {
+                        return
+                    }
+                    
+                    if board!.setValue(index: index, val: val) {
+                        print("great success!")
+                        drawSudokuBoardCell(index: index, value: val)
+                    }
+                }
+            }
         }
     }
 }
