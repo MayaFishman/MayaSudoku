@@ -1,7 +1,11 @@
 import SpriteKit
 
-class SudokuScene: SKScene {
-    
+let CellSelectionColor = SKColor(red: 0.7, green: 0.85, blue: 1.0, alpha: 1.0)
+let CellSelectionErrorColor = SKColor(red: 1.0, green: 0.4, blue: 0.4, alpha: 1.0)
+
+class SudokuScene: SKScene {    
+    public var difficulty: SudokuBoard.Difficulty = SudokuBoard.Difficulty.beginner
+
     // Variable to keep track of the currently selected cell
     private var selectedCell: SKShapeNode?
     private var gridSize: CGFloat = 0.0
@@ -13,6 +17,7 @@ class SudokuScene: SKScene {
     private var mistakes: Int = 0
     private var quitButton: SKSpriteNode!
     private var quitLabel: SKLabelNode! // Quit label
+ 
     
     override func didMove(to view: SKView) {
         gridSize = min(size.width, size.height) * 1
@@ -32,7 +37,7 @@ class SudokuScene: SKScene {
         // Generate the Sudoku board asynchronously
         DispatchQueue.global(qos: .userInitiated).async {
             self.board = SudokuBoard()
-            self.board?.generate(difficulty: SudokuBoard.Difficulty.veryHard)
+            self.board?.generate(difficulty: self.difficulty)
             
             // Return to the main thread to handle the fade-out and UI update
             DispatchQueue.main.async {
@@ -51,6 +56,7 @@ class SudokuScene: SKScene {
                             self.drawSudokuGrid()
                             self.drawNumberCells()
                             self.drawSudokuBoard()
+                            self.checkAndRemoveNumbersCells()
                             
                             gridSize = min(size.width, size.height) * 1
                             
@@ -76,12 +82,12 @@ class SudokuScene: SKScene {
                             mistakesLabel = SKLabelNode(text: "Mistakes: 0")
                             mistakesLabel.fontName = "AvenirNext"
                             mistakesLabel.fontSize = 20
-                            mistakesLabel.fontColor = .red
+                            mistakesLabel.fontColor = SKColor(red: 1.0, green: 0.3, blue: 0.3, alpha: 1.0)
                             mistakesLabel.position = rightPosition // Set to right half
                             mistakesLabel.zPosition = 10
                             addChild(mistakesLabel)
                             
-                            let buttonWidth: CGFloat = 80
+                            let buttonWidth: CGFloat = 100
                             let buttonHeight: CGFloat = 40
                             quitButton = SKSpriteNode(color: .magenta, size: CGSize(width: buttonWidth, height: buttonHeight))
                             quitButton.position = CGPoint(x: leftPosition.x, y: leftPosition.y + 50) // Above timer
@@ -94,7 +100,9 @@ class SudokuScene: SKScene {
                             quitLabel.fontName = "AvenirNext"
                             quitLabel.fontSize = 20
                             quitLabel.fontColor = .white
-                            quitLabel.position = CGPoint(x: 0, y: -4) // Centered within the button
+                            quitLabel.verticalAlignmentMode = .center
+                            quitLabel.horizontalAlignmentMode = .center
+                            //quitLabel.position = CGPoint(x: 0, y: 0) // Centered within the button
                             quitLabel.name = "quitButton"
                             quitButton.addChild(quitLabel)
                             
@@ -119,6 +127,7 @@ class SudokuScene: SKScene {
         let seconds = elapsedTime % 60
         timerLabel.text = String(format: "Time: %02d:%02d", minutes, seconds)
     }
+    
     private func drawSudokuBoardCell(index: Int, value: Int) {
         let row = index / 9
         let col = index % 9
@@ -136,9 +145,9 @@ class SudokuScene: SKScene {
         // If the cell contains a non-zero value, display it
         if value != 0 {
             let numberLabel = SKLabelNode(text: "\(value)")
-            numberLabel.fontName = "AvenirNext"
-            numberLabel.fontSize = 24
-            numberLabel.fontColor = .black
+            numberLabel.fontName = "AvenirNext-Regular"
+            numberLabel.fontSize = 32
+            numberLabel.fontColor = SKColor(red: 0.2, green: 0.2, blue: 0.2, alpha: 1.0)
             numberLabel.verticalAlignmentMode = .center
             numberLabel.horizontalAlignmentMode = .center
             numberLabel.position = CGPoint(x:0, y:0)
@@ -169,18 +178,20 @@ class SudokuScene: SKScene {
             let linePositionX = gridOrigin.x + CGFloat(row) * cellSize
             
             // Horizontal line
-            let horizontalLine = SKShapeNode(rectOf: CGSize(width: gridSize, height: row % 3 == 0 ? 4 : 1))
+            let horizontalLine = SKShapeNode(rectOf: CGSize(width: gridSize, height: row % 3 == 0 ? 2 : 1))
             horizontalLine.position = CGPoint(x: size.width / 2, y: linePositionY)
             if row % 3 == 0 {
-                horizontalLine.fillColor = row % 3 == 0 ? .black : .gray
+                horizontalLine.fillColor = row % 3 == 0 ? .black : .lightGray
+                horizontalLine.zPosition = 2
                 addChild(horizontalLine)
             }
             
             // Vertical line
-            let verticalLine = SKShapeNode(rectOf: CGSize(width: row % 3 == 0 ? 4 : 1, height: gridSize))
+            let verticalLine = SKShapeNode(rectOf: CGSize(width: row % 3 == 0 ? 2 : 1, height: gridSize))
             verticalLine.position = CGPoint(x: linePositionX, y: size.height / 2)
             if row % 3 == 0 {
-                verticalLine.fillColor = row % 3 == 0 ? .black : .gray
+                verticalLine.fillColor = row % 3 == 0 ? .black : .lightGray
+                verticalLine.zPosition = 2
                 addChild(verticalLine)
             }
         }
@@ -191,7 +202,7 @@ class SudokuScene: SKScene {
                 let cellPosition = CGPoint(x: gridOrigin.x + CGFloat(col) * cellSize + cellSize / 2,
                                            y: gridOrigin.y + CGFloat(row) * cellSize + cellSize / 2)
                 
-                let cell = SKShapeNode(rectOf: CGSize(width: cellSize - 2, height: cellSize - 2) /*cornerRadius: 4*/)
+                let cell = SKShapeNode(rectOf: CGSize(width: cellSize, height: cellSize) /*cornerRadius: 4*/)
                 cell.position = cellPosition
                 cell.strokeColor = .lightGray
                 cell.fillColor = .white
@@ -221,8 +232,8 @@ class SudokuScene: SKScene {
             
             // Add label with number
             let numberLabel = SKLabelNode(text: "\(i)")
-            numberLabel.fontName = "AvenirNext"
-            numberLabel.fontSize = 24
+            numberLabel.fontName = "AvenirNext-Regular"
+            numberLabel.fontSize = 32
             numberLabel.fontColor = .black
             numberLabel.verticalAlignmentMode = .center
             numberLabel.horizontalAlignmentMode = .center
@@ -233,6 +244,23 @@ class SudokuScene: SKScene {
         }
     }
     
+    func removeNumberCell(i: Int) {
+        for child in children {
+            if let cell = child as? SKShapeNode, cell.name?.starts(with: "numberCell_\(i)") == true {
+                removeChildren(in: [cell])
+                break
+            }
+        }
+    }
+
+    func checkAndRemoveNumbersCells() {
+        for i in [1,2,3,4,5,6,7,8,9] {
+            if ((board!.isSolvedForVal(val: i))) {
+                removeNumberCell(i: i)
+            }
+        }
+    }
+
     func clearCells() {
         // Clear any previous highlights
         for child in children {
@@ -248,7 +276,7 @@ class SudokuScene: SKScene {
             if let cell = child as? SKShapeNode, cell.name?.starts(with: "cell_") == true {
                 // Check if the cell contains the specified value
                 if let label = cell.children.first as? SKLabelNode, label.text == "\(val)" {
-                    cell.fillColor = SKColor(red: 0.7, green: 0.85, blue: 1.0, alpha: 1.0) // Highlight color
+                    cell.fillColor = CellSelectionColor
                 }
             }
         }
@@ -312,20 +340,39 @@ class SudokuScene: SKScene {
             if parts.count == 2, let val = Int(parts[1]) {
                 if selectedCell != nil {
                     let index = cellToIndex(cell: selectedCell!)
-                    if index == -1 {
+                    if index == -1 || boardValues[index] != 0 {
                         return
                     }
                     
                     if board!.setValue(index: index, val: val) {
                         print("great success!")
+
+                        // shake visual effect
+                        let shake = SKAction.sequence(
+                            [SKAction.scale(to: 1.1, duration: 0.1),
+                             SKAction.scale(to: 1.0, duration: 0.1)]
+                        )
+                        selectedCell?.run(shake)
+            
                         drawSudokuBoardCell(index: index, value: val)
+                        checkAndRemoveNumbersCells()
+                        checkIfGameCompleted()
+                        selectedCell = nil
+                        highlightCellsWithVal(val: val)
                     } else {
                         // If incorrect, increment mistakes
                         mistakes += 1
                         mistakesLabel.text = "Mistakes: \(mistakes)"
                         
-                        // Optional: add a visual effect to indicate a mistake (e.g., cell flash or shake)
-                        let shake = SKAction.sequence([SKAction.scale(to: 1.1, duration: 0.1), SKAction.scale(to: 1.0, duration: 0.1)])
+                        // shake visual effect
+                        selectedCell?.fillColor = CellSelectionErrorColor
+                        let shake = SKAction.sequence([
+                            SKAction.scale(to: 1.1, duration: 0.1),
+                            SKAction.scale(to: 1.0, duration: 0.1),
+                            SKAction.run {
+                                self.selectedCell?.fillColor = CellSelectionColor
+                            }
+                        ])
                         selectedCell?.run(shake)
                         
                     }

@@ -102,7 +102,7 @@ class SudokuBoard {
         let targetCount: Int
         switch difficulty {
         case .beginner:
-            targetCount = Int.random(in: 50...59)
+            targetCount = Int.random(in: 50...60)
         case .intermediate:
             targetCount = Int.random(in: 40...49)
         case .hard:
@@ -152,6 +152,11 @@ class SudokuBoard {
     }
     func isSolved() -> Bool {
         return solvedBoard == unsolvedBoard
+    }
+    
+    func isSolvedForVal(val: Int) ->Bool {
+        let count = unsolvedBoard.filter { $0 == val }.count
+        return count == 9
     }
 }
 

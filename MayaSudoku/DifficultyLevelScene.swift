@@ -1,16 +1,16 @@
 import SpriteKit
 
-class MainMenuScene: SKScene {
+class DifficultyLevelScene: SKScene {
     
     override func didMove(to view: SKView) {
         backgroundColor = SKColor(red: 0.2, green: 0.2, blue: 0.35, alpha: 1.0)
         
         // Add Title Label with Shadow
-        let titleLabel = SKLabelNode(text: "Game Menu")
+        let titleLabel = SKLabelNode(text: "Difficulty")
         titleLabel.fontName = "AvenirNext-Bold"
         titleLabel.fontSize = 48
         titleLabel.fontColor = .white
-        titleLabel.position = CGPoint(x: size.width / 2, y: size.height * 0.7)
+        titleLabel.position = CGPoint(x: size.width / 2, y: size.height * 0.8)
         addChild(titleLabel)
         
         let shadowLabel = titleLabel.copy() as! SKLabelNode
@@ -23,13 +23,21 @@ class MainMenuScene: SKScene {
         let screenCenter = CGPoint(x: size.width / 2, y: size.height / 2)
         
         // Create buttons with a shadow effect
-        let singlePlayerButton = createButton(text: "Single Player", position: CGPoint(x: screenCenter.x, y: screenCenter.y + 50))
-        singlePlayerButton.name = "SinglePlayer"
-        addChild(singlePlayerButton)
+        let easyButton = createButton(text: "Easy", position: CGPoint(x: screenCenter.x, y: screenCenter.y + 150))
+        easyButton.name = "Easy"
+        addChild(easyButton)
         
-        let multiPlayerButton = createButton(text: "Multi Player", position: CGPoint(x: screenCenter.x, y: screenCenter.y - 50))
-        multiPlayerButton.name = "MultiPlayer"
-        addChild(multiPlayerButton)
+        let mediumButton = createButton(text: "Medium", position: CGPoint(x: screenCenter.x, y: screenCenter.y + 50))
+        mediumButton.name = "Medium"
+        addChild(mediumButton)
+        
+        let hardButton = createButton(text: "Hard", position: CGPoint(x: screenCenter.x, y: screenCenter.y - 50))
+        hardButton.name = "Hard"
+        addChild(hardButton)
+        
+        let veryhardButton = createButton(text: "Very Hard", position: CGPoint(x: screenCenter.x, y: screenCenter.y - 150))
+        veryhardButton.name = "Very Hard"
+        addChild(veryhardButton)
         
     }
     
@@ -71,7 +79,7 @@ class MainMenuScene: SKScene {
     
     // Recursive function to find the parent button node
     private func findParentButton(node: SKNode?) -> SKShapeNode? {
-        if let button = node as? SKShapeNode, button.name == "SinglePlayer" || button.name == "MultiPlayer" {
+        if let button = node as? SKShapeNode, button.name == "Easy" || button.name == "Medium" || button.name == "Hard" || button.name == "Very Hard" {
             return button
         } else if let parent = node?.parent {
             return findParentButton(node: parent)
@@ -88,10 +96,14 @@ class MainMenuScene: SKScene {
             if let button = findParentButton(node: touchedNode) {
                 button.fillColor = SKColor(red: 0.2, green: 0.45, blue: 0.75, alpha: 1.0)
                 buttonTappedAnimation(button)
-                if button.name == "SinglePlayer" {
-                    startSinglePlayerGame()
-                } else if button.name == "MultiPlayer" {
-                    startMultiPlayerGame()
+                if button.name == "Easy" {
+                    startSinglePlayerGame(difficulty: SudokuBoard.Difficulty.beginner)
+                } else if button.name == "Medium" {
+                    startSinglePlayerGame(difficulty: SudokuBoard.Difficulty.intermediate)
+                } else if button.name == "Hard" {
+                    startSinglePlayerGame(difficulty: SudokuBoard.Difficulty.hard)
+                } else if button.name == "Very Hard" {
+                    startSinglePlayerGame(difficulty: SudokuBoard.Difficulty.veryHard)
                 }
             }
         }
@@ -109,17 +121,12 @@ class MainMenuScene: SKScene {
     }
     
     // Start Single Player Game
-    private func startSinglePlayerGame() {
+    private func startSinglePlayerGame(difficulty: SudokuBoard.Difficulty) {
         print("Single Player Game Started!")
-        let menu = DifficultyLevelScene(size: self.size)
-        menu.scaleMode = .aspectFill
+        let sudokuScene = SudokuScene(size: self.size)
+        sudokuScene.scaleMode = .aspectFill
+        sudokuScene.difficulty = difficulty
         let transition = SKTransition.fade(withDuration: 1.0)
-        self.view?.presentScene(menu, transition: transition)
-    }
-    
-    // Start Multi Player Game
-    private func startMultiPlayerGame() {
-        print("Multi Player Game Started!")
-        // Transition to Multi Player Game Scene
+        self.view?.presentScene(sudokuScene, transition: transition)
     }
 }
