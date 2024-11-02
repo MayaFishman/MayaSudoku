@@ -5,13 +5,52 @@ class SudokuScene: SKScene {
     // Variable to keep track of the currently selected cell
     private var selectedCell: SKShapeNode?
     private var gridSize: CGFloat = 0.0
+    private var board: SudokuBoard?
     
     override func didMove(to view: SKView) {
         backgroundColor = .white
         gridSize = min(size.width, size.height) * 1
+        board = SudokuBoard()
+        board?.generate(difficulty: SudokuBoard.Difficulty.veryHard)
+        
         drawSudokuGrid()
         drawNumberCells()
+        drawSudokuBoard()
     }
+    
+    private func drawSudokuBoard() {
+        guard let boardValues = board?.getUnsolved() else { return }
+        
+        let cellSize = gridSize / 9.0
+        let gridOrigin = CGPoint(x: (size.width - gridSize) / 2, y: (size.height - gridSize) / 2)
+        
+        for (index, value) in boardValues.enumerated() {
+            let row = index / 9
+            let col = index % 9
+            
+            // Calculate the position of the cell
+            let cellPosition = CGPoint(
+                x: gridOrigin.x + CGFloat(col) * cellSize + cellSize / 2,
+                y: gridOrigin.y + CGFloat(row) * cellSize + cellSize / 2
+            )
+            
+            // If the cell contains a non-zero value, display it
+            if value != 0 {
+                let numberLabel = SKLabelNode(text: "\(value)")
+                numberLabel.fontName = "AvenirNext-Bold"
+                numberLabel.fontSize = 24
+                numberLabel.fontColor = .black
+                numberLabel.verticalAlignmentMode = .center
+                numberLabel.horizontalAlignmentMode = .center
+                numberLabel.position = cellPosition
+                numberLabel.zPosition = 2 // Above the cell background
+                
+                addChild(numberLabel)
+            }
+        }
+    }
+
+    
     private func drawSudokuGrid() {
         // Size and position of the grid
         let cellSize = gridSize / 9.0
