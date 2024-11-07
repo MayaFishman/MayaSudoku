@@ -7,20 +7,27 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		3C5E4FE52CCCDFC100668FBD /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C5E4FE42CCCDFC100668FBD /* AppDelegate.swift */; };
+		3C5E4FE52CCCDFC100668FBD /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C5E4FE42CCCDFC100668FBD /* AppDelegate.swift */; platformFilter = ios; };
 		3C5E4FE72CCCDFC200668FBD /* GameScene.sks in Resources */ = {isa = PBXBuildFile; fileRef = 3C5E4FE62CCCDFC200668FBD /* GameScene.sks */; };
 		3C5E4FE92CCCDFC200668FBD /* Actions.sks in Resources */ = {isa = PBXBuildFile; fileRef = 3C5E4FE82CCCDFC200668FBD /* Actions.sks */; };
 		3C5E4FEB2CCCDFC200668FBD /* GameScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C5E4FEA2CCCDFC200668FBD /* GameScene.swift */; };
 		3C5E4FED2CCCDFC200668FBD /* GameViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C5E4FEC2CCCDFC200668FBD /* GameViewController.swift */; };
-		3C5E4FF02CCCDFC200668FBD /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 3C5E4FEE2CCCDFC200668FBD /* Main.storyboard */; };
+		3C5E4FF02CCCDFC200668FBD /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 3C5E4FEE2CCCDFC200668FBD /* Main.storyboard */; platformFilter = ios; };
 		3C5E4FF22CCCDFC500668FBD /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3C5E4FF12CCCDFC500668FBD /* Assets.xcassets */; };
-		3C5E4FF52CCCDFC500668FBD /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 3C5E4FF32CCCDFC500668FBD /* LaunchScreen.storyboard */; };
+		3C5E4FF52CCCDFC500668FBD /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 3C5E4FF32CCCDFC500668FBD /* LaunchScreen.storyboard */; platformFilter = ios; };
 		3C5E4FFC2CCCE1AF00668FBD /* MainMenuScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C5E4FFB2CCCE1AF00668FBD /* MainMenuScene.swift */; };
 		3C5E50002CCD04F400668FBD /* SudokuScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C5E4FFF2CCD04F400668FBD /* SudokuScene.swift */; };
 		3C5E50022CD61D1500668FBD /* SudokuBoard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C5E50012CD61D1500668FBD /* SudokuBoard.swift */; };
 		3C5E50042CD6251D00668FBD /* WaitingScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C5E50032CD6251D00668FBD /* WaitingScene.swift */; };
+		AA85FF7A2CDA5E3700E03112 /* entitlements.plist in Resources */ = {isa = PBXBuildFile; fileRef = AA85FF792CDA5E3700E03112 /* entitlements.plist */; };
+		AA85FF802CDB903900E03112 /* ButtonNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA85FF7F2CDB903400E03112 /* ButtonNode.swift */; };
+		AA85FF822CDBA07100E03112 /* MultiplayerNewScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA85FF812CDBA06600E03112 /* MultiplayerNewScene.swift */; };
+		AA85FF842CDBD0B600E03112 /* MultiplayerJoinScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA85FF832CDBD0AD00E03112 /* MultiplayerJoinScene.swift */; };
 		AAB283D02CD6CBF1003E0BF3 /* DifficultyLevelScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAB283CF2CD6CBE1003E0BF3 /* DifficultyLevelScene.swift */; };
 		AAB283D52CD6D9D6003E0BF3 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AAB283D32CD6D9D6003E0BF3 /* Assets.xcassets */; };
+		AAB283DA2CD78046003E0BF3 /* GameSessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAB283D92CD78040003E0BF3 /* GameSessionManager.swift */; };
+		AAB283DE2CD7808F003E0BF3 /* MultiplayerScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAB283DD2CD78086003E0BF3 /* MultiplayerScene.swift */; };
+		AAB283E72CD81A56003E0BF3 /* PeerManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAB283E62CD81A4D003E0BF3 /* PeerManager.swift */; platformFilter = ios; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -37,8 +44,16 @@
 		3C5E4FFF2CCD04F400668FBD /* SudokuScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SudokuScene.swift; sourceTree = "<group>"; };
 		3C5E50012CD61D1500668FBD /* SudokuBoard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SudokuBoard.swift; sourceTree = "<group>"; };
 		3C5E50032CD6251D00668FBD /* WaitingScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaitingScene.swift; sourceTree = "<group>"; };
+		AA85FF792CDA5E3700E03112 /* entitlements.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = entitlements.plist; sourceTree = "<group>"; };
+		AA85FF7F2CDB903400E03112 /* ButtonNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ButtonNode.swift; sourceTree = "<group>"; };
+		AA85FF812CDBA06600E03112 /* MultiplayerNewScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiplayerNewScene.swift; sourceTree = "<group>"; };
+		AA85FF832CDBD0AD00E03112 /* MultiplayerJoinScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiplayerJoinScene.swift; sourceTree = "<group>"; };
 		AAB283CF2CD6CBE1003E0BF3 /* DifficultyLevelScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DifficultyLevelScene.swift; sourceTree = "<group>"; };
 		AAB283D32CD6D9D6003E0BF3 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		AAB283D92CD78040003E0BF3 /* GameSessionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameSessionManager.swift; sourceTree = "<group>"; };
+		AAB283DD2CD78086003E0BF3 /* MultiplayerScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiplayerScene.swift; sourceTree = "<group>"; };
+		AAB283E52CD7837B003E0BF3 /* MayaSudoko-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "MayaSudoko-Info.plist"; sourceTree = "<group>"; };
+		AAB283E62CD81A4D003E0BF3 /* PeerManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -55,6 +70,8 @@
 		3C5E4FD82CCCDFC100668FBD = {
 			isa = PBXGroup;
 			children = (
+				AAB283E52CD7837B003E0BF3 /* MayaSudoko-Info.plist */,
+				AA85FF792CDA5E3700E03112 /* entitlements.plist */,
 				AAB283D32CD6D9D6003E0BF3 /* Assets.xcassets */,
 				3C5E4FE32CCCDFC100668FBD /* MayaSudoku */,
 				3C5E4FE22CCCDFC100668FBD /* Products */,
@@ -72,6 +89,10 @@
 		3C5E4FE32CCCDFC100668FBD /* MayaSudoku */ = {
 			isa = PBXGroup;
 			children = (
+				AA85FF832CDBD0AD00E03112 /* MultiplayerJoinScene.swift */,
+				AA85FF812CDBA06600E03112 /* MultiplayerNewScene.swift */,
+				AAB283DD2CD78086003E0BF3 /* MultiplayerScene.swift */,
+				AAB283D92CD78040003E0BF3 /* GameSessionManager.swift */,
 				AAB283CF2CD6CBE1003E0BF3 /* DifficultyLevelScene.swift */,
 				3C5E4FE42CCCDFC100668FBD /* AppDelegate.swift */,
 				3C5E4FE62CCCDFC200668FBD /* GameScene.sks */,
@@ -85,6 +106,8 @@
 				3C5E4FFF2CCD04F400668FBD /* SudokuScene.swift */,
 				3C5E50012CD61D1500668FBD /* SudokuBoard.swift */,
 				3C5E50032CD6251D00668FBD /* WaitingScene.swift */,
+				AA85FF7F2CDB903400E03112 /* ButtonNode.swift */,
+				AAB283E62CD81A4D003E0BF3 /* PeerManager.swift */,
 			);
 			path = MayaSudoku;
 			sourceTree = "<group>";
@@ -153,6 +176,7 @@
 				3C5E4FF22CCCDFC500668FBD /* Assets.xcassets in Resources */,
 				3C5E4FF52CCCDFC500668FBD /* LaunchScreen.storyboard in Resources */,
 				3C5E4FE92CCCDFC200668FBD /* Actions.sks in Resources */,
+				AA85FF7A2CDA5E3700E03112 /* entitlements.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -163,14 +187,20 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AA85FF822CDBA07100E03112 /* MultiplayerNewScene.swift in Sources */,
 				3C5E50042CD6251D00668FBD /* WaitingScene.swift in Sources */,
+				AAB283DA2CD78046003E0BF3 /* GameSessionManager.swift in Sources */,
+				AA85FF842CDBD0B600E03112 /* MultiplayerJoinScene.swift in Sources */,
 				3C5E4FEB2CCCDFC200668FBD /* GameScene.swift in Sources */,
 				3C5E4FED2CCCDFC200668FBD /* GameViewController.swift in Sources */,
 				3C5E50022CD61D1500668FBD /* SudokuBoard.swift in Sources */,
+				AA85FF802CDB903900E03112 /* ButtonNode.swift in Sources */,
+				AAB283E72CD81A56003E0BF3 /* PeerManager.swift in Sources */,
 				3C5E4FE52CCCDFC100668FBD /* AppDelegate.swift in Sources */,
 				3C5E50002CCD04F400668FBD /* SudokuScene.swift in Sources */,
 				AAB283D02CD6CBF1003E0BF3 /* DifficultyLevelScene.swift in Sources */,
 				3C5E4FFC2CCCE1AF00668FBD /* MainMenuScene.swift in Sources */,
+				AAB283DE2CD7808F003E0BF3 /* MultiplayerScene.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -229,6 +259,7 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_ENTITLEMENTS = entitlements.plist;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -292,6 +323,7 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_ENTITLEMENTS = entitlements.plist;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
@@ -320,10 +352,13 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 6DY7Z4SVDZ;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "MayaSudoko-Info.plist";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Multiplayer Bpnjour discovery service";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;
@@ -335,8 +370,12 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = maya.fishman.MayaSudoko;
+				PRODUCT_BUNDLE_IDENTIFIER = maya.fishman.MayaSudoko12345;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				REGISTER_APP_GROUPS = NO;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTS_MACCATALYST = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -348,10 +387,13 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 6DY7Z4SVDZ;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "MayaSudoko-Info.plist";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Multiplayer Bpnjour discovery service";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;
@@ -363,8 +405,12 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = maya.fishman.MayaSudoko;
+				PRODUCT_BUNDLE_IDENTIFIER = maya.fishman.MayaSudoko12345;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				REGISTER_APP_GROUPS = NO;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTS_MACCATALYST = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
