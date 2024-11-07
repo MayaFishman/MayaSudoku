@@ -95,14 +95,23 @@ class MultiplayerJoinScene: SKScene, UIPickerViewDataSource, UIPickerViewDelegat
         let gameCode = selectedDigits.map { String($0) }.joined()
         print("Attempting to join game with code: \(gameCode)")
 
-        if gameCode.count == 4 {
-            GameSessionManager.shared.joinGameSession(with: gameCode)
-        } else {
-            print("Please enter a valid 4-digit code")
+        // Transition back to the previous scene (e.g., MainMenuScene)
+        UIView.animate(withDuration: 0.5, animations: {
+            self.digitPickers.forEach { $0.alpha = 0 } // Fade each picker out
+        }) { _ in
+            // Remove pickers after fade-out is complete
+            self.digitPickers.forEach { $0.removeFromSuperview() }
         }
+
+        let waitingScene = MultiplayerWaitForHostScene(size: self.size)
+        waitingScene.partyCode = gameCode
+        let transition = SKTransition.fade(withDuration: 0.5)
+        view?.presentScene(waitingScene, transition: transition)
     }
 
     private func goBack() {
+        GameSessionManager.shared.cancelSession()
+
         // Transition back to the previous scene (e.g., MainMenuScene)
         UIView.animate(withDuration: 0.5, animations: {
             self.digitPickers.forEach { $0.alpha = 0 } // Fade each picker out

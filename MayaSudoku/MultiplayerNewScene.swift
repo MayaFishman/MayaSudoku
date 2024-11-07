@@ -7,22 +7,15 @@ class MultiplayerNewScene: SKScene {
     private let gameSession = GameSessionManager.shared
     private var partyCode: String = ""
     private var partyCodeValueLabel: SKLabelNode! = nil
+    private var startButton: ButtonNode!
 
     override func didMove(to view: SKView) {
         backgroundColor = SKColor(red: 0.2, green: 0.2, blue: 0.35, alpha: 1.0)
 
-        gameSession.hostGameSession(playerCount: 4) { result in
+        let partyCode = String(format: "%04d", Int.random(in: 1000...9999))
+        gameSession.hostGameSession(code: partyCode) { result in
             switch result {
-            case .success(let partyCode):
-                self.partyCode = partyCode
-                DispatchQueue.main.async {
-                    if let label = self.partyCodeValueLabel {
-                        print("Updating label text to: \(partyCode)")
-                        label.text = partyCode
-                    } else {
-                        print("Error: partyCodeValueLabel is nil")
-                    }
-                }
+            case .success(_):
                 print("Successfully created game with party code: \(partyCode)")
                 // Proceed to next steps, such as presenting the game scene
             case .failure(let error):
@@ -44,17 +37,26 @@ class MultiplayerNewScene: SKScene {
         partyCodeTextLabel.fontName = "AvenirNext-Regular"
         partyCodeTextLabel.fontSize = 32
         partyCodeTextLabel.fontColor = .white
-        partyCodeTextLabel.position = CGPoint(x: 20, y: titleLabel.position.y - 80)
-        partyCodeTextLabel.horizontalAlignmentMode = .left
-        addChild(partyCodeTextLabel)
+        partyCodeTextLabel.position = CGPoint(x: size.width / 2 - 10, y: titleLabel.position.y - 80)
+        partyCodeTextLabel.horizontalAlignmentMode = .right
 
         // Party Code Value (actual code in yellow)
         partyCodeValueLabel = SKLabelNode(text: partyCode)
         partyCodeValueLabel.fontName = "AvenirNext-Regular"
         partyCodeValueLabel.fontSize = 32
         partyCodeValueLabel.fontColor = SKColor(red: 0.85, green: 0.85, blue: 0.3, alpha: 1.0) // Yellow color for code
-        partyCodeValueLabel.position = CGPoint(x: size.width - 20, y: partyCodeTextLabel.position.y)
-        partyCodeValueLabel.horizontalAlignmentMode = .right
+        partyCodeValueLabel.position = CGPoint(x: size.width / 2 + 10, y: partyCodeTextLabel.position.y)
+        partyCodeValueLabel.horizontalAlignmentMode = .left
+
+        // Calculate total width of both labels
+        let combinedWidth = partyCodeTextLabel.frame.width + 20 + partyCodeValueLabel.frame.width
+        // Calculate starting position to center both labels together
+        let startX = (size.width - combinedWidth) / 2
+        // Position labels relative to startX to center the group horizontally
+        partyCodeTextLabel.position = CGPoint(x: startX + partyCodeTextLabel.frame.width, y: titleLabel.position.y - 80)
+        partyCodeValueLabel.position = CGPoint(x: startX + partyCodeTextLabel.frame.width + 20, y: partyCodeTextLabel.position.y)
+
+        addChild(partyCodeTextLabel)
         addChild(partyCodeValueLabel)
 
         drawPlayerPlaceholders()
@@ -67,11 +69,12 @@ class MultiplayerNewScene: SKScene {
         addChild(backButton)
 
         // Start Button positioned below the player list
-        let startButton = ButtonNode(text: "Start", position: CGPoint(x: size.width / 2, y: size.height * 0.75 - 350))
+        startButton = ButtonNode(text: "Start", position: CGPoint(x: size.width / 2, y: size.height * 0.75 - 350))
         startButton.onTap = { [weak self] in
             self?.startGame()
         }
         addChild(startButton)
+        startButton.disable()
         updatePlayerList()
 
         NotificationCenter.default.addObserver(self, selector: #selector(handleConnectedPlayersChanged(notification:)), name: .connectedPlayersDidChange, object: nil)
@@ -154,8 +157,13 @@ class MultiplayerNewScene: SKScene {
             rotatingDots.position = CGPoint(x: 0, y: 0)
             playerSlots[i].addChild(rotatingDots)
         }
-    }
 
+        if playerNames.count < 2 {
+            startButton.disable()
+        } else {
+            startButton.enable()
+        }
+    }
 
     // Simulate a player joining for demonstration purposes
     func addPlayer(name: String) {
@@ -165,6 +173,7 @@ class MultiplayerNewScene: SKScene {
     }
 
     private func goBack() {
+        gameSession.cancelSession()
         let mainMenuScene = MainMenuScene(size: self.size)
         let transition = SKTransition.fade(withDuration: 0.5)
         view?.presentScene(mainMenuScene, transition: transition)
@@ -173,12 +182,18 @@ class MultiplayerNewScene: SKScene {
     private func startGame() {
         // Code to start the game; replace with actual game start logic
         print("Game Started!")
-        let gameScene = SKScene(size: self.size) // Replace with actual game scene
+
+        let sudokuScene = SudokuScene(size: self.size)
+        sudokuScene.scaleMode = .aspectFill
+        sudokuScene.difficulty = SudokuBoard.Difficulty.veryHard
+        sudokuScene.isMultiplayer = true
+        sudokuScene.isMultiplayerHost = true
         let transition = SKTransition.fade(withDuration: 0.5)
-        view?.presentScene(gameScene, transition: transition)
+        self.view?.presentScene(sudokuScene, transition: transition)
     }
 
     private func returnToPreviousScene() {
+        gameSession.cancelSession()
         // Transition back to the main menu or previous scene
         let mainMenuScene = MainMenuScene(size: self.size)
         let transition = SKTransition.fade(withDuration: 0.5)

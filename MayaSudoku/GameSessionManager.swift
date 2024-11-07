@@ -3,13 +3,15 @@ import SpriteKit
 
 extension Notification.Name {
     static let connectedPlayersDidChange = Notification.Name("connectedPlayersDidChange")
+    static let gameStarted = Notification.Name("gameStarted")
+    static let gameEnded = Notification.Name("gameEnded")
 }
 
 class GameSessionManager: NSObject, GKMatchDelegate, GKLocalPlayerListener {
     var match: GKMatch?
     var partyCode: String?
-    var playerCount: Int = 2
     var isHost: Bool = false
+    var matchPlayers: [GKPlayer] = []
 
     static let shared = GameSessionManager()
 
@@ -41,17 +43,12 @@ class GameSessionManager: NSObject, GKMatchDelegate, GKLocalPlayerListener {
     }
 
     // Host creates a game session with a unique party code
-    func hostGameSession(playerCount: Int, completion: @escaping (Result<String, Error>) -> Void) {
-        guard (2...4).contains(playerCount) else {
-            let error = NSError(domain: "GameSessionManagerError", code: 1, userInfo: [NSLocalizedDescriptionKey: "Player count must be between 2 and 4."])
-            completion(.failure(error))
-            return
-        }
-
-        self.playerCount = playerCount
-        self.partyCode = String(format: "%04d", Int.random(in: 1000...9999))
+    func hostGameSession(code: String, completion: @escaping (Result<String, Error>) -> Void) {
+        self.partyCode = code
         self.isHost = true
         print("Party Code for session: \(partyCode!)")
+
+        GKMatchmaker.shared().cancel()
 
         let request = GKMatchRequest()
         request.minPlayers = 2
@@ -80,50 +77,45 @@ class GameSessionManager: NSObject, GKMatchDelegate, GKLocalPlayerListener {
     }
 
     // Other players join the game session using the party code
-    func joinGameSession(with partyCode: String) {
+    func joinGameSession(with partyCode: String, completion: @escaping (Result<GKMatch, Error>) -> Void) {
         let request = GKMatchRequest()
         request.minPlayers = 2
         request.maxPlayers = 4
         request.queueName = "com.maya.sudoko.PartyCodeQueue"
         request.properties = ["partyCode": partyCode]
 
+        GKMatchmaker.shared().cancel()
+
         GKMatchmaker.shared().findMatch(for: request) { match, error in
             if let error = error {
                 print("Error joining match: \(error.localizedDescription)")
+                completion(.failure(error))
                 return
             }
             self.match = match
             self.match?.delegate = self
             print("Successfully joined match with party code: \(partyCode)")
-            self.waitForGameStart()
-        }
-    }
-
-    // Host monitors connected players and starts the match when ready
-    private func monitorPlayers() {
-        Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { timer in
-            print("Connected players: \(self.connectedPlayers.map { $0.displayName })")
-            if self.connectedPlayers.count == self.playerCount {
-                print("All players joined. Starting match.")
-                self.startMatch()
-                timer.invalidate()
-            }
+            completion(.success(match!))
         }
     }
 
     // Starts the match for all players (host calls this)
-    private func startMatch() {
+    func startMatch(board: SudokuBoard) {
         GKMatchmaker.shared().finishMatchmaking(for: match!)
-        if isHost {
-            sendDataToAllPlayers(message: "startGame")
-            print("Game started by host.")
-            // Game-specific start logic goes here
-        }
-    }
+        matchPlayers = connectedPlayers
 
-    // Called by joining players to wait until the host starts the game
-    private func waitForGameStart() {
-        print("Waiting for the host to start the game...")
+        if isHost {
+            var jsonObject: [String: Any] = [
+                "msg": "startGame",
+                "player": GKLocalPlayer.local.displayName,
+                "solvedBoard":board.getSolved(),
+                "unsolvedBoard": board.getUnsolved()
+            ]
+
+            guard let data = try? JSONSerialization.data(withJSONObject: jsonObject, options: []) else { return }
+            sendDataToAllPlayers(data: data)
+            print("Game started by host.")
+        }
     }
 
     // Cancel the session if needed
@@ -143,9 +135,16 @@ class GameSessionManager: NSObject, GKMatchDelegate, GKLocalPlayerListener {
     }
 
     func match(_ match: GKMatch, didReceive data: Data, fromRemotePlayer player: GKPlayer) {
-        if let message = String(data: data, encoding: .utf8), message == "startGame" {
-            print("Game starting signal received.")
-            // Game-specific start logic for joining players goes here
+        if let jsonObject = try? JSONSerialization.jsonObject(with: data, options: []),
+           let jsonDict = jsonObject as? [String: Any],
+           let msg = jsonDict["msg"] as? String {
+            if msg == "startGame" {
+                print("Starting game as guest...")
+                GKMatchmaker.shared().finishMatchmaking(for: match)
+                matchPlayers = connectedPlayers
+                notifyGameStarted(solvedBoard: jsonDict["solvedBoard"] as! [Int],
+                                  unsolvedBoard: jsonDict["unsolvedBoard"] as! [Int])
+            }
         }
     }
 
@@ -164,11 +163,11 @@ class GameSessionManager: NSObject, GKMatchDelegate, GKLocalPlayerListener {
 
     // MARK: - Sending Data to Players
 
-    func sendDataToAllPlayers(message: String) {
-        guard let match = match, let data = message.data(using: .utf8) else { return }
+    func sendDataToAllPlayers(data: Data) {
+        guard let match = match else { return }
         do {
             try match.sendData(toAllPlayers: data, with: .reliable)
-            print("Sent message to all players: \(message)")
+            print("Sent message to all players: \(data)")
         } catch {
             print("Error sending data: \(error.localizedDescription)")
         }
@@ -192,6 +191,12 @@ class GameSessionManager: NSObject, GKMatchDelegate, GKLocalPlayerListener {
         // Perform any updates here when connectedPlayers changes
         print("Connected players updated: \(connectedPlayers.map { $0.displayName })")
         NotificationCenter.default.post(name: .connectedPlayersDidChange, object: nil, userInfo: ["connectedPlayers": connectedPlayers])
+    }
+
+    private func notifyGameStarted(solvedBoard: [Int], unsolvedBoard: [Int]) {
+        print("Game started")
+        NotificationCenter.default.post(name: .gameStarted, object: nil,
+            userInfo: ["solvedBoard": solvedBoard, "unsolvedBoard": unsolvedBoard])
     }
 }
 

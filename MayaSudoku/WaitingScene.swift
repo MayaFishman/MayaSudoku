@@ -2,25 +2,31 @@ import SpriteKit
 
 class WaitingAnimationNode: SKNode {
     private var crunchLabel: SKLabelNode!
-    
-    override init() {
-        super.init()
-        
+    private var fontColor: UIColor = .black
+
+    convenience init(fontColor: UIColor = .black) {
+        self.init()
+        self.fontColor = fontColor
+
         // Set up the label
         crunchLabel = SKLabelNode(fontNamed: "Courier-Bold")
         crunchLabel.fontSize = 50
         crunchLabel.position = CGPoint(x: 0, y: 0)
-        crunchLabel.fontColor = .black
+        crunchLabel.fontColor = fontColor
         addChild(crunchLabel)
-        
+
         // Start the crunching animation
         startCrunchingAnimation()
     }
-    
+
+    override init() {
+        super.init()
+    }
+
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
+
     private func startCrunchingAnimation() {
         let crunchAction = SKAction.repeatForever(
             SKAction.sequence([
@@ -33,7 +39,7 @@ class WaitingAnimationNode: SKNode {
         )
         crunchLabel.run(crunchAction)
     }
-    
+
     private func generateRandomNumberString() -> String {
         var randomString = ""
         for _ in 1...10 {

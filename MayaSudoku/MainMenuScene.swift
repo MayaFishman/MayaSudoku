@@ -42,7 +42,7 @@ class MainMenuScene: SKScene {
         print("Single Player Game Started!")
         let menu = DifficultyLevelScene(size: self.size)
         menu.scaleMode = .aspectFill
-        let transition = SKTransition.fade(withDuration: 1.0)
+        let transition = SKTransition.fade(withDuration: 0.5)
         self.view?.presentScene(menu, transition: transition)
     }
 
@@ -51,7 +51,7 @@ class MainMenuScene: SKScene {
         print("Multi Player Game Started!")
         let multiScene = MultiplayerScene(size: self.size)
         multiScene.scaleMode = .aspectFill
-        let transition = SKTransition.fade(withDuration: 1.0)
+        let transition = SKTransition.fade(withDuration: 0.5)
         self.view?.presentScene(multiScene, transition: transition)
     }
 }

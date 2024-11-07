@@ -28,6 +28,7 @@
 		AAB283DA2CD78046003E0BF3 /* GameSessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAB283D92CD78040003E0BF3 /* GameSessionManager.swift */; };
 		AAB283DE2CD7808F003E0BF3 /* MultiplayerScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAB283DD2CD78086003E0BF3 /* MultiplayerScene.swift */; };
 		AAB283E72CD81A56003E0BF3 /* PeerManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAB283E62CD81A4D003E0BF3 /* PeerManager.swift */; platformFilter = ios; };
+		AACA14422CDD2DB1001E4D54 /* MulltiplayerWaitForGame.swift in Sources */ = {isa = PBXBuildFile; fileRef = AACA14412CDD2D9F001E4D54 /* MulltiplayerWaitForGame.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -54,6 +55,7 @@
 		AAB283DD2CD78086003E0BF3 /* MultiplayerScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiplayerScene.swift; sourceTree = "<group>"; };
 		AAB283E52CD7837B003E0BF3 /* MayaSudoko-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "MayaSudoko-Info.plist"; sourceTree = "<group>"; };
 		AAB283E62CD81A4D003E0BF3 /* PeerManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerManager.swift; sourceTree = "<group>"; };
+		AACA14412CDD2D9F001E4D54 /* MulltiplayerWaitForGame.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MulltiplayerWaitForGame.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -89,6 +91,7 @@
 		3C5E4FE32CCCDFC100668FBD /* MayaSudoku */ = {
 			isa = PBXGroup;
 			children = (
+				AACA14412CDD2D9F001E4D54 /* MulltiplayerWaitForGame.swift */,
 				AA85FF832CDBD0AD00E03112 /* MultiplayerJoinScene.swift */,
 				AA85FF812CDBA06600E03112 /* MultiplayerNewScene.swift */,
 				AAB283DD2CD78086003E0BF3 /* MultiplayerScene.swift */,
@@ -194,6 +197,7 @@
 				3C5E4FEB2CCCDFC200668FBD /* GameScene.swift in Sources */,
 				3C5E4FED2CCCDFC200668FBD /* GameViewController.swift in Sources */,
 				3C5E50022CD61D1500668FBD /* SudokuBoard.swift in Sources */,
+				AACA14422CDD2DB1001E4D54 /* MulltiplayerWaitForGame.swift in Sources */,
 				AA85FF802CDB903900E03112 /* ButtonNode.swift in Sources */,
 				AAB283E72CD81A56003E0BF3 /* PeerManager.swift in Sources */,
 				3C5E4FE52CCCDFC100668FBD /* AppDelegate.swift in Sources */,

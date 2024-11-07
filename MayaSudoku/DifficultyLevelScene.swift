@@ -43,7 +43,7 @@ class DifficultyLevelScene: SKScene {
         let sudokuScene = SudokuScene(size: self.size)
         sudokuScene.scaleMode = .aspectFill
         sudokuScene.difficulty = difficulty
-        let transition = SKTransition.fade(withDuration: 1.0)
+        let transition = SKTransition.fade(withDuration: 0.5)
         self.view?.presentScene(sudokuScene, transition: transition)
     }
 }

@@ -9,7 +9,6 @@ class SudokuScene: SKScene {
     // Variable to keep track of the currently selected cell
     private var selectedCell: SKShapeNode?
     private var gridSize: CGFloat = 0.0
-    private var board: SudokuBoard?
     private var timerLabel: SKLabelNode!
     private var mistakesLabel: SKLabelNode!
     private var timer: Timer?
@@ -17,115 +16,127 @@ class SudokuScene: SKScene {
     private var mistakes: Int = 0
     private var quitButton: SKSpriteNode!
     private var quitLabel: SKLabelNode! // Quit label
-
     private var cells: [SKNode?] = Array(repeating: nil, count: 81)
 
+    var board: SudokuBoard?
+    var isMultiplayer: Bool = false
+    var isMultiplayerHost: Bool = false
 
     override func didMove(to view: SKView) {
-        //gridSize = min(size.width, size.height) * 1
-        if UIDevice.current.userInterfaceIdiom == .pad {
-            // For iPad, use 85% of the screen width to add padding
-            gridSize = min(size.width, size.height) * 0.85
-        } else {
-            // For iPhone, use the full screen width
-            gridSize = min(size.width, size.height) * 1
-        }
+        // Adjust grid size based on device type
+        gridSize = min(size.width, size.height) * (UIDevice.current.userInterfaceIdiom == .pad ? 0.85 : 1)
 
-        // Create a white background node and add it at the lowest zPosition
+        // Add a white background node
         let backgroundNode = SKSpriteNode(color: .white, size: self.size)
         backgroundNode.position = CGPoint(x: size.width / 2, y: size.height / 2)
         backgroundNode.zPosition = -1
         addChild(backgroundNode)
 
-        // Create and add WaitingAnimationNode as an overlay
-        let waitingAnimation = WaitingAnimationNode()
-        waitingAnimation.position = CGPoint(x: size.width / 2, y: size.height / 2)
-        waitingAnimation.name = "waitingAnimation" // Set a name for easy removal
-        addChild(waitingAnimation)
+        // Conditionally add waiting animation if multiplayer host
+        if !isMultiplayer || isMultiplayerHost {
+            let waitingAnimation = WaitingAnimationNode(fontColor: .black)
+            waitingAnimation.position = CGPoint(x: size.width / 2, y: size.height / 2)
+            waitingAnimation.name = "waitingAnimation"
+            addChild(waitingAnimation)
+        } else {
+            self.setup()
+            return
+        }
 
-        // Generate the Sudoku board asynchronously
+        // Generate Sudoku board asynchronously
         DispatchQueue.global(qos: .userInitiated).async {
-            self.board = SudokuBoard()
-            self.board?.generate(difficulty: self.difficulty)
+            let startTime = Date() // Record start time
 
-            // Return to the main thread to handle the fade-out and UI update
-            DispatchQueue.main.async {
-                if let waitingAnimation = self.childNode(withName: "waitingAnimation") {
-                    // Create the fade-out and remove actions
-                    let fadeOut = SKAction.fadeOut(withDuration: 0.5)
-                    let minimumDisplayTime = SKAction.wait(forDuration: 2.0)
-                    let remove = SKAction.removeFromParent()
+            if !self.isMultiplayer || self.isMultiplayerHost {
+                self.board = SudokuBoard()
+                self.board?.generate(difficulty: self.difficulty)
+            }
 
-                    // Sequence that fades out and removes the waiting animation, then draws the board
-                    let fadeOutAndRemove = SKAction.sequence([
-                        minimumDisplayTime,
-                        fadeOut,
-                        remove,
-                        SKAction.run { [weak self] in
-                            guard let self = self else { return }
-                            // Draw the grid, number cells, and the Sudoku board after fade-out completes
-                            self.drawSudokuGrid()
-                            self.drawNumberCells()
-                            self.drawSudokuBoard()
-                            self.checkAndRemoveNumbersCells()
+            if self.isMultiplayerHost {
+                GameSessionManager.shared.startMatch(board: self.board!)
+            }
 
-                            // Calculate positions for the timer and mistakes labels based on screen width
-                            let gridOrigin = CGPoint(x: (size.width - gridSize) / 2, y: (size.height - gridSize) / 2)
+            // Calculate elapsed time and required wait time
+            let elapsedTime = Date().timeIntervalSince(startTime)
+            let remainingTime = max(0, 2.0 - elapsedTime) // Ensure at least 2 seconds
 
-                            // Calculate left and right positions for the labels
-                            let leftPosition = CGPoint(x: gridOrigin.x + 10, y: gridOrigin.y + gridSize + 20)
-                            let rightPosition = CGPoint(x: gridOrigin.x + gridSize - 10, y: gridOrigin.y + gridSize + 20)
-
-                            // Initialize and position timer label on the left side of the screen
-                            timerLabel = SKLabelNode(text: "Time: 00:00")
-                            timerLabel.fontName = "AvenirNext-Regular"
-                            timerLabel.fontSize = 20
-                            timerLabel.fontColor = .blue
-                            timerLabel.position = leftPosition // Set to left half
-                            timerLabel.horizontalAlignmentMode = .left
-                            timerLabel.zPosition = 10
-                            addChild(timerLabel)
-
-                            // Initialize and position mistakes label on the right side of the screen
-                            mistakesLabel = SKLabelNode(text: "Mistakes: 0")
-                            mistakesLabel.fontName = "AvenirNext-Regular"
-                            mistakesLabel.fontSize = 20
-                            mistakesLabel.fontColor = SKColor(red: 1.0, green: 0.3, blue: 0.3, alpha: 1.0)
-                            mistakesLabel.position = rightPosition // Set to right half
-                            mistakesLabel.horizontalAlignmentMode = .right
-                            mistakesLabel.zPosition = 10
-                            addChild(mistakesLabel)
-
-                            let buttonWidth: CGFloat = 100
-                            let buttonHeight: CGFloat = 40
-                            quitButton = SKSpriteNode(color: .magenta, size: CGSize(width: buttonWidth, height: buttonHeight))
-                            quitButton.position = CGPoint(x: leftPosition.x + buttonWidth / 2, y: leftPosition.y + 50) // Above timer
-                            quitButton.zPosition = 10
-                            quitButton.name = "quitButton" // Name for touch detection
-                            addChild(quitButton)
-
-                            // Quit label setup
-                            quitLabel = SKLabelNode(text: "Quit")
-                            quitLabel.fontName = "AvenirNext-Regular"
-                            quitLabel.fontSize = 20
-                            quitLabel.fontColor = .white
-                            quitLabel.verticalAlignmentMode = .center
-                            quitLabel.horizontalAlignmentMode = .center
-                            //quitLabel.position = CGPoint(x: 0, y: 0) // Centered within the button
-                            quitLabel.name = "quitButton"
-                            quitButton.addChild(quitLabel)
-
-                            // Start timer
-                            startTimer()
-                        }
-                    ])
-
-                    // Run the fade-out and remove sequence
-                    waitingAnimation.run(fadeOutAndRemove)
-                }
+            // Update UI on the main thread
+            DispatchQueue.main.asyncAfter(deadline: .now() + remainingTime) {
+                self.removeWaitingAnimationAndSetup()
             }
         }
     }
+
+    private func removeWaitingAnimationAndSetup() {
+        if let waitingAnimation = childNode(withName: "waitingAnimation") {
+            let fadeOutAndRemove = SKAction.sequence([
+                SKAction.fadeOut(withDuration: 0.5),
+                SKAction.removeFromParent(),
+                SKAction.run { [weak self] in self?.setup() }
+            ])
+            waitingAnimation.run(fadeOutAndRemove)
+        }
+    }
+
+    private func setup() {
+        if self.isMultiplayerHost {
+            GameSessionManager.shared.startMatch(board: self.board!)
+        }
+        drawSudokuGrid()
+        drawNumberCells()
+        drawSudokuBoard()
+        checkAndRemoveNumbersCells()
+
+        // Calculate positions for the timer and mistakes labels based on screen width
+        let gridOrigin = CGPoint(x: (size.width - gridSize) / 2, y: (size.height - gridSize) / 2)
+
+        // Calculate left and right positions for the labels
+        let leftPosition = CGPoint(x: gridOrigin.x + 10, y: gridOrigin.y + gridSize + 20)
+        let rightPosition = CGPoint(x: gridOrigin.x + gridSize - 10, y: gridOrigin.y + gridSize + 20)
+
+        // Initialize and position timer label on the left side of the screen
+        timerLabel = SKLabelNode(text: "Time: 00:00")
+        timerLabel.fontName = "AvenirNext-Regular"
+        timerLabel.fontSize = 20
+        timerLabel.fontColor = .blue
+        timerLabel.position = leftPosition // Set to left half
+        timerLabel.horizontalAlignmentMode = .left
+        timerLabel.zPosition = 10
+        addChild(timerLabel)
+
+        // Initialize and position mistakes label on the right side of the screen
+        mistakesLabel = SKLabelNode(text: "Mistakes: 0")
+        mistakesLabel.fontName = "AvenirNext-Regular"
+        mistakesLabel.fontSize = 20
+        mistakesLabel.fontColor = SKColor(red: 1.0, green: 0.3, blue: 0.3, alpha: 1.0)
+        mistakesLabel.position = rightPosition // Set to right half
+        mistakesLabel.horizontalAlignmentMode = .right
+        mistakesLabel.zPosition = 10
+        addChild(mistakesLabel)
+
+        let buttonWidth: CGFloat = 100
+        let buttonHeight: CGFloat = 40
+        quitButton = SKSpriteNode(color: .magenta, size: CGSize(width: buttonWidth, height: buttonHeight))
+        quitButton.position = CGPoint(x: leftPosition.x + buttonWidth / 2, y: leftPosition.y + 50) // Above timer
+        quitButton.zPosition = 10
+        quitButton.name = "quitButton" // Name for touch detection
+        addChild(quitButton)
+
+        // Quit label setup
+        quitLabel = SKLabelNode(text: "Quit")
+        quitLabel.fontName = "AvenirNext-Regular"
+        quitLabel.fontSize = 20
+        quitLabel.fontColor = .white
+        quitLabel.verticalAlignmentMode = .center
+        quitLabel.horizontalAlignmentMode = .center
+        //quitLabel.position = CGPoint(x: 0, y: 0) // Centered within the button
+        quitLabel.name = "quitButton"
+        quitButton.addChild(quitLabel)
+
+        // Start timer
+        startTimer()
+    }
+
     private func startTimer() {
         timer = Timer.scheduledTimer(timeInterval: 1.0, target: self, selector: #selector(updateTimer), userInfo: nil, repeats: true)
     }
