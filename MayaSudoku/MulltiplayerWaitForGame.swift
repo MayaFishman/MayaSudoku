@@ -99,6 +99,7 @@ class MultiplayerWaitForHostScene: SKScene {
         sudokuScene.isMultiplayer = true
         sudokuScene.isMultiplayerHost = false
         sudokuScene.board = board
+        sudokuScene.score.setInitialScore(score: (notification.userInfo?["initialScore"] as? Int)!)
         let transition = SKTransition.fade(withDuration: 0.5)
         self.view?.presentScene(sudokuScene, transition: transition)
     }

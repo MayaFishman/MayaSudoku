@@ -1,10 +1,12 @@
 import SpriteKit
+import GameKit
 
 let CellSelectionColor = SKColor(red: 0.7, green: 0.85, blue: 1.0, alpha: 1.0)
 let CellSelectionErrorColor = SKColor(red: 1.0, green: 0.4, blue: 0.4, alpha: 1.0)
 
-class SudokuScene: SKScene {
+class SudokuScene: SKScene, ScoreDelegate {
     public var difficulty: SudokuBoard.Difficulty = SudokuBoard.Difficulty.beginner
+    let score = Score()
 
     // Variable to keep track of the currently selected cell
     private var selectedCell: SKShapeNode?
@@ -17,6 +19,8 @@ class SudokuScene: SKScene {
     private var quitButton: SKSpriteNode!
     private var quitLabel: SKLabelNode! // Quit label
     private var cells: [SKNode?] = Array(repeating: nil, count: 81)
+    private var playersNode: SKShapeNode!
+    private var gridOrigin: CGPoint!
 
     var board: SudokuBoard?
     var isMultiplayer: Bool = false
@@ -52,10 +56,6 @@ class SudokuScene: SKScene {
                 self.board?.generate(difficulty: self.difficulty)
             }
 
-            if self.isMultiplayerHost {
-                GameSessionManager.shared.startMatch(board: self.board!)
-            }
-
             // Calculate elapsed time and required wait time
             let elapsedTime = Date().timeIntervalSince(startTime)
             let remainingTime = max(0, 2.0 - elapsedTime) // Ensure at least 2 seconds
@@ -79,16 +79,20 @@ class SudokuScene: SKScene {
     }
 
     private func setup() {
-        if self.isMultiplayerHost {
-            GameSessionManager.shared.startMatch(board: self.board!)
+        gridOrigin = CGPoint(x: (size.width - gridSize) / 2, y: (size.height - gridSize) / 2)
+        if isMultiplayer {
+            gridOrigin.y -= 50
         }
+
+        if isMultiplayerHost {
+            GameSessionManager.shared.startMatch(board: self.board!, initialScore: score.score)
+        }
+        score.delegate = self
+
         drawSudokuGrid()
         drawNumberCells()
         drawSudokuBoard()
         checkAndRemoveNumbersCells()
-
-        // Calculate positions for the timer and mistakes labels based on screen width
-        let gridOrigin = CGPoint(x: (size.width - gridSize) / 2, y: (size.height - gridSize) / 2)
 
         // Calculate left and right positions for the labels
         let leftPosition = CGPoint(x: gridOrigin.x + 10, y: gridOrigin.y + gridSize + 20)
@@ -118,6 +122,9 @@ class SudokuScene: SKScene {
         let buttonHeight: CGFloat = 40
         quitButton = SKSpriteNode(color: .magenta, size: CGSize(width: buttonWidth, height: buttonHeight))
         quitButton.position = CGPoint(x: leftPosition.x + buttonWidth / 2, y: leftPosition.y + 50) // Above timer
+        if isMultiplayer {
+            quitButton.position = CGPoint(x: leftPosition.x + buttonWidth / 2, y: leftPosition.y + 150) // Above timer
+        }
         quitButton.zPosition = 10
         quitButton.name = "quitButton" // Name for touch detection
         addChild(quitButton)
@@ -135,6 +142,7 @@ class SudokuScene: SKScene {
 
         // Start timer
         startTimer()
+        score.start()
     }
 
     private func startTimer() {
@@ -146,6 +154,54 @@ class SudokuScene: SKScene {
         let minutes = elapsedTime / 60
         let seconds = elapsedTime % 60
         timerLabel.text = String(format: "Time: %02d:%02d", minutes, seconds)
+
+        if isMultiplayer {
+            drawMultiplayerScore()
+        }
+    }
+
+    private func drawMultiplayerScore() {
+        let players = GameSessionManager.shared.sortedPlayersByScore()
+
+        let leftPosition = CGPoint(x: gridOrigin.x + 10, y: gridOrigin.y + gridSize + 20)
+        let rightPosition = CGPoint(x: gridOrigin.x + gridSize - 10, y: gridOrigin.y + gridSize + 20)
+        let playersNodeRect = CGRect(x: leftPosition.x, y: leftPosition.y + 30,
+                        width: rightPosition.x - leftPosition.x, height: 90)
+        let verticalOffset = [playersNodeRect.height/4, playersNodeRect.height/4, -playersNodeRect.height/4, -playersNodeRect.height/4]
+
+        if playersNode == nil {
+            playersNode = SKShapeNode(rect: playersNodeRect)
+            addChild(playersNode)
+        } else {
+            playersNode.removeAllChildren()
+        }
+
+        // Create and position label nodes for each player in the parent (e.g., the scene)
+        for (index, (player, score)) in players.enumerated() {
+            let labelNode = SKLabelNode(text: String(format: "%d. %@: %d", index+1, player.displayName, score))
+            labelNode.fontSize = 20
+            labelNode.fontName = "AvenirNext-Regular"
+            labelNode.fontColor = player == GKLocalPlayer.local ? .blue : .black // Set desired font color
+            labelNode.verticalAlignmentMode = .center
+
+            // Calculate y-position for each player, evenly spaced vertically within playersNodeRect
+            let yPosition = players.count <= 2 ? playersNodeRect.midY : playersNodeRect.midY + verticalOffset[index]
+
+            // Alternate left and right placement for players
+            if index % 2 == 0 {
+                // Left side
+                labelNode.position = CGPoint(x: playersNodeRect.minX, y: yPosition)
+                labelNode.horizontalAlignmentMode = .left
+            } else {
+                // Right side
+                labelNode.position = CGPoint(x: playersNodeRect.maxX, y: yPosition)
+                labelNode.horizontalAlignmentMode = .right
+            }
+
+            // Add the label node directly to the parent (e.g., the scene)
+            playersNode.addChild(labelNode)
+
+        }
     }
 
     private func drawSudokuBoardCell(index: Int, value: Int) {
@@ -179,7 +235,6 @@ class SudokuScene: SKScene {
     private func drawSudokuGrid() {
         // Size and position of the grid
         let cellSize = gridSize / 9.0
-        let gridOrigin = CGPoint(x: (size.width - gridSize) / 2, y: (size.height - gridSize) / 2)
 
         // Draw grid lines
         for row in 0...9 {
@@ -188,7 +243,7 @@ class SudokuScene: SKScene {
 
             // Horizontal line
             let horizontalLine = SKShapeNode(rectOf: CGSize(width: gridSize, height: row % 3 == 0 ? 2 : 1))
-            horizontalLine.position = CGPoint(x: size.width / 2, y: linePositionY)
+            horizontalLine.position = CGPoint(x: gridOrigin.x + gridSize / 2, y: linePositionY)
             if row % 3 == 0 {
                 horizontalLine.fillColor = row % 3 == 0 ? .black : .lightGray
                 horizontalLine.zPosition = 2
@@ -197,7 +252,7 @@ class SudokuScene: SKScene {
 
             // Vertical line
             let verticalLine = SKShapeNode(rectOf: CGSize(width: row % 3 == 0 ? 2 : 1, height: gridSize))
-            verticalLine.position = CGPoint(x: linePositionX, y: size.height / 2)
+            verticalLine.position = CGPoint(x: linePositionX, y: gridOrigin.y + gridSize / 2)
             if row % 3 == 0 {
                 verticalLine.fillColor = row % 3 == 0 ? .black : .lightGray
                 verticalLine.zPosition = 2
@@ -226,8 +281,7 @@ class SudokuScene: SKScene {
     private func drawNumberCells() {
         // Size and spacing of the number cells
         let cellSize = gridSize / 9.0
-        let gridOrigin = CGPoint(x: (size.width - gridSize) / 2, y: (size.height - gridSize) / 2 + gridSize / 6)
-        let bottomOffset = gridOrigin.y - cellSize * 3 // Space below the grid for number cells
+        let bottomOffset = gridOrigin.y / 2 // Space below the grid for number cells
 
         let startX = (size.width - gridSize) / 2 + cellSize / 2
 
@@ -296,6 +350,10 @@ class SudokuScene: SKScene {
             timer?.invalidate()
             print("Game Completed!")
         }
+        if score.score == 0 {
+            timer?.invalidate()
+            print("Game Over!")
+        }
     }
 
     func cellToIndex(cell: SKShapeNode) -> Int {
@@ -356,6 +414,7 @@ class SudokuScene: SKScene {
 
                     if board!.setValue(index: index, val: val) {
                         print("great success!")
+                        score.addPointsForCorrectPlacement()
 
                         // shake visual effect
                         selectedCell?.zPosition = 3
@@ -380,6 +439,9 @@ class SudokuScene: SKScene {
                         // If incorrect, increment mistakes
                         mistakes += 1
                         mistakesLabel.text = "Mistakes: \(mistakes)"
+
+                        score.registerMistake()
+                        checkIfGameCompleted()
 
                         // shake visual effect
                         selectedCell?.fillColor = CellSelectionErrorColor
@@ -408,5 +470,10 @@ class SudokuScene: SKScene {
         let mainMenuScene = MainMenuScene(size: self.size)
         self.view?.presentScene(mainMenuScene, transition: transition)
     }
-}
 
+    func scoreDidUpdate(newScore: Int) {
+        if isMultiplayer {
+            GameSessionManager.shared.sendScore(score: newScore)
+        }
+    }
+}

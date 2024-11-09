@@ -12,6 +12,7 @@ class GameSessionManager: NSObject, GKMatchDelegate, GKLocalPlayerListener {
     var partyCode: String?
     var isHost: Bool = false
     var matchPlayers: [GKPlayer] = []
+    var scores: [GKPlayer : Int] = [:]
 
     static let shared = GameSessionManager()
 
@@ -22,6 +23,14 @@ class GameSessionManager: NSObject, GKMatchDelegate, GKLocalPlayerListener {
 
     var connectedPlayers: [GKPlayer] {
         match?.players ?? []
+    }
+
+    func score(player: GKPlayer) -> Int {
+        return scores[player] ?? 0
+    }
+
+    func sortedPlayersByScore() -> [(GKPlayer, Int)] {
+        return scores.sorted { $0.value > $1.value }
     }
 
     func authenticatePlayer(completion: @escaping (Bool) -> Void) {
@@ -100,22 +109,36 @@ class GameSessionManager: NSObject, GKMatchDelegate, GKLocalPlayerListener {
     }
 
     // Starts the match for all players (host calls this)
-    func startMatch(board: SudokuBoard) {
+    func startMatch(board: SudokuBoard, initialScore: Int) {
         GKMatchmaker.shared().finishMatchmaking(for: match!)
         matchPlayers = connectedPlayers
+        matchPlayers.append(GKLocalPlayer.local)
+        scores[GKLocalPlayer.local] = initialScore
 
         if isHost {
             var jsonObject: [String: Any] = [
                 "msg": "startGame",
                 "player": GKLocalPlayer.local.displayName,
                 "solvedBoard":board.getSolved(),
-                "unsolvedBoard": board.getUnsolved()
+                "unsolvedBoard": board.getUnsolved(),
+                "score": initialScore
             ]
 
             guard let data = try? JSONSerialization.data(withJSONObject: jsonObject, options: []) else { return }
             sendDataToAllPlayers(data: data)
             print("Game started by host.")
         }
+    }
+
+    func sendScore(score: Int) {
+        var jsonObject: [String: Any] = [
+            "msg": "scoreChanged",
+            "score": score,
+        ]
+
+        guard let data = try? JSONSerialization.data(withJSONObject: jsonObject, options: []) else { return }
+        sendDataToAllPlayers(data: data)
+        scores[GKLocalPlayer.local] = score
     }
 
     // Cancel the session if needed
@@ -142,8 +165,17 @@ class GameSessionManager: NSObject, GKMatchDelegate, GKLocalPlayerListener {
                 print("Starting game as guest...")
                 GKMatchmaker.shared().finishMatchmaking(for: match)
                 matchPlayers = connectedPlayers
+                matchPlayers.append(GKLocalPlayer.local)
                 notifyGameStarted(solvedBoard: jsonDict["solvedBoard"] as! [Int],
-                                  unsolvedBoard: jsonDict["unsolvedBoard"] as! [Int])
+                                  unsolvedBoard: jsonDict["unsolvedBoard"] as! [Int],
+                                  initialScore: jsonDict["score"] as! Int)
+                for player in matchPlayers {
+                    scores[player] = jsonDict["score"] as? Int
+                }
+            } else if msg == "scoreChanged" {
+                let score = jsonDict["score"] as! Int
+                print("Score changed to \(score)")
+                scores[player] = score
             }
         }
     }
@@ -193,10 +225,12 @@ class GameSessionManager: NSObject, GKMatchDelegate, GKLocalPlayerListener {
         NotificationCenter.default.post(name: .connectedPlayersDidChange, object: nil, userInfo: ["connectedPlayers": connectedPlayers])
     }
 
-    private func notifyGameStarted(solvedBoard: [Int], unsolvedBoard: [Int]) {
+    private func notifyGameStarted(solvedBoard: [Int], unsolvedBoard: [Int], initialScore: Int) {
         print("Game started")
         NotificationCenter.default.post(name: .gameStarted, object: nil,
-            userInfo: ["solvedBoard": solvedBoard, "unsolvedBoard": unsolvedBoard])
+                                        userInfo: ["solvedBoard": solvedBoard,
+                                                   "unsolvedBoard": unsolvedBoard,
+                                                   "initialScore": initialScore])
     }
 }
 

@@ -29,6 +29,7 @@
 		AAB283DE2CD7808F003E0BF3 /* MultiplayerScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAB283DD2CD78086003E0BF3 /* MultiplayerScene.swift */; };
 		AAB283E72CD81A56003E0BF3 /* PeerManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAB283E62CD81A4D003E0BF3 /* PeerManager.swift */; platformFilter = ios; };
 		AACA14422CDD2DB1001E4D54 /* MulltiplayerWaitForGame.swift in Sources */ = {isa = PBXBuildFile; fileRef = AACA14412CDD2D9F001E4D54 /* MulltiplayerWaitForGame.swift */; };
+		AACA14442CDE6C65001E4D54 /* Score.swift in Sources */ = {isa = PBXBuildFile; fileRef = AACA14432CDE6C62001E4D54 /* Score.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -56,6 +57,7 @@
 		AAB283E52CD7837B003E0BF3 /* MayaSudoko-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "MayaSudoko-Info.plist"; sourceTree = "<group>"; };
 		AAB283E62CD81A4D003E0BF3 /* PeerManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerManager.swift; sourceTree = "<group>"; };
 		AACA14412CDD2D9F001E4D54 /* MulltiplayerWaitForGame.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MulltiplayerWaitForGame.swift; sourceTree = "<group>"; };
+		AACA14432CDE6C62001E4D54 /* Score.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Score.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -92,6 +94,7 @@
 			isa = PBXGroup;
 			children = (
 				AACA14412CDD2D9F001E4D54 /* MulltiplayerWaitForGame.swift */,
+				AACA14432CDE6C62001E4D54 /* Score.swift */,
 				AA85FF832CDBD0AD00E03112 /* MultiplayerJoinScene.swift */,
 				AA85FF812CDBA06600E03112 /* MultiplayerNewScene.swift */,
 				AAB283DD2CD78086003E0BF3 /* MultiplayerScene.swift */,
@@ -192,6 +195,7 @@
 			files = (
 				AA85FF822CDBA07100E03112 /* MultiplayerNewScene.swift in Sources */,
 				3C5E50042CD6251D00668FBD /* WaitingScene.swift in Sources */,
+				AACA14442CDE6C65001E4D54 /* Score.swift in Sources */,
 				AAB283DA2CD78046003E0BF3 /* GameSessionManager.swift in Sources */,
 				AA85FF842CDBD0B600E03112 /* MultiplayerJoinScene.swift in Sources */,
 				3C5E4FEB2CCCDFC200668FBD /* GameScene.swift in Sources */,
