@@ -15,12 +15,13 @@ class SudokuScene: SKScene, ScoreDelegate {
     private var mistakesLabel: SKLabelNode!
     private var timer: Timer?
     private var elapsedTime: Int = 0
-    private var mistakes: Int = 0
     private var quitButton: SKSpriteNode!
     private var quitLabel: SKLabelNode! // Quit label
     private var cells: [SKNode?] = Array(repeating: nil, count: 81)
     private var playersNode: SKShapeNode!
     private var gridOrigin: CGPoint!
+    private var myScore: Int = 0
+    private var gameCompleted: Bool = false
 
     var board: SudokuBoard?
     var isMultiplayer: Bool = false
@@ -84,9 +85,13 @@ class SudokuScene: SKScene, ScoreDelegate {
             gridOrigin.y -= 50
         }
 
+        myScore = score.score
         if isMultiplayerHost {
             GameSessionManager.shared.startMatch(board: self.board!, initialScore: score.score)
+        } else if isMultiplayer {
+            GameSessionManager.shared.sendScore(score: score.score, mistakes: score.mistakes, isComplete: false)
         }
+
         score.delegate = self
 
         drawSudokuGrid()
@@ -157,6 +162,7 @@ class SudokuScene: SKScene, ScoreDelegate {
 
         if isMultiplayer {
             drawMultiplayerScore()
+            checkForMultiplayerGameOver()
         }
     }
 
@@ -176,31 +182,38 @@ class SudokuScene: SKScene, ScoreDelegate {
             playersNode.removeAllChildren()
         }
 
-        // Create and position label nodes for each player in the parent (e.g., the scene)
-        for (index, (player, score)) in players.enumerated() {
-            let labelNode = SKLabelNode(text: String(format: "%d. %@: %d", index+1, player.displayName, score))
-            labelNode.fontSize = 20
+        let labelFontSize: CGFloat = 20
+        let totalAvailableHeight = playersNodeRect.height
+        let verticalSpacing = totalAvailableHeight / CGFloat(players.count + 1) // Divide space evenly
+
+        for (index, (player, (score, mistakes, completed))) in players.enumerated() {
+            let labelNode = SKLabelNode(text: "\(index + 1). \(player.displayName)")
+            labelNode.fontSize = labelFontSize
             labelNode.fontName = "AvenirNext-Regular"
-            labelNode.fontColor = player == GKLocalPlayer.local ? .blue : .black // Set desired font color
-            labelNode.verticalAlignmentMode = .center
-
-            // Calculate y-position for each player, evenly spaced vertically within playersNodeRect
-            let yPosition = players.count <= 2 ? playersNodeRect.midY : playersNodeRect.midY + verticalOffset[index]
-
-            // Alternate left and right placement for players
-            if index % 2 == 0 {
-                // Left side
-                labelNode.position = CGPoint(x: playersNodeRect.minX, y: yPosition)
-                labelNode.horizontalAlignmentMode = .left
-            } else {
-                // Right side
-                labelNode.position = CGPoint(x: playersNodeRect.maxX, y: yPosition)
-                labelNode.horizontalAlignmentMode = .right
+            labelNode.fontColor = player == GKLocalPlayer.local ? .blue : .black
+            if completed {
+                labelNode.fontColor = .gray
             }
+            labelNode.verticalAlignmentMode = .center
+            labelNode.horizontalAlignmentMode = .left
+
+            // Calculate y-position for each player, evenly spaced vertically
+            let yPosition = playersNodeRect.maxY - verticalSpacing * CGFloat(index + 1)
+            labelNode.position = CGPoint(x: playersNodeRect.minX, y: yPosition)
+
+            let scoreLabelNode = SKLabelNode()
+            scoreLabelNode.text = ": \(score) / \(mistakes)"
+            scoreLabelNode.fontSize = 20
+            scoreLabelNode.fontName = "AvenirNext-Regular"
+            scoreLabelNode.fontColor = .black
+            scoreLabelNode.horizontalAlignmentMode = .left
+            scoreLabelNode.verticalAlignmentMode = .center
+
+            scoreLabelNode.position = CGPoint(x: labelNode.position.x + labelNode.frame.width, y: yPosition)
 
             // Add the label node directly to the parent (e.g., the scene)
             playersNode.addChild(labelNode)
-
+            playersNode.addChild(scoreLabelNode)
         }
     }
 
@@ -347,12 +360,7 @@ class SudokuScene: SKScene, ScoreDelegate {
     }
     private func checkIfGameCompleted() {
         if board!.isSolved() {
-            timer?.invalidate()
-            print("Game Completed!")
-        }
-        if score.score == 0 {
-            timer?.invalidate()
-            print("Game Over!")
+            score.setComplete()
         }
     }
 
@@ -372,6 +380,10 @@ class SudokuScene: SKScene, ScoreDelegate {
 
         if touchedNode.name == "quitButton" {
             handleQuitButton()
+            return
+        }
+
+        if gameCompleted {
             return
         }
 
@@ -437,10 +449,8 @@ class SudokuScene: SKScene, ScoreDelegate {
 
                     } else {
                         // If incorrect, increment mistakes
-                        mistakes += 1
-                        mistakesLabel.text = "Mistakes: \(mistakes)"
-
                         score.registerMistake()
+                        mistakesLabel.text = "Mistakes: \(score.mistakes)"
                         checkIfGameCompleted()
 
                         // shake visual effect
@@ -471,9 +481,75 @@ class SudokuScene: SKScene, ScoreDelegate {
         self.view?.presentScene(mainMenuScene, transition: transition)
     }
 
-    func scoreDidUpdate(newScore: Int) {
+    func scoreDidUpdate(newScore: Int, mistakes: Int, completed: Bool) {
+        if gameCompleted {
+            return
+        }
+        myScore = newScore
+        gameCompleted = completed
+
         if isMultiplayer {
-            GameSessionManager.shared.sendScore(score: newScore)
+            GameSessionManager.shared.sendScore(score: newScore, mistakes: mistakes, isComplete: completed)
+        }
+
+        if completed {
+            timer?.invalidate()
+            print("Game Completed!")
+
+            if myScore > 0 {
+                showGameOver(won: true)
+            } else {
+                showGameOver(won: false)
+            }
+        }
+    }
+
+    private func showGameOver(won: Bool) {
+        if won {
+            let alert = UIAlertController(title: "Game Over", message: "You won", preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: "Close", style: .default))
+
+            if let viewController = view?.window?.rootViewController {
+                viewController.present(alert, animated: true, completion: nil)
+            }
+        } else {
+            let alert = UIAlertController(title: "Game Over", message: "You lost", preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: "Close", style: .default))
+
+            if let viewController = view?.window?.rootViewController {
+                viewController.present(alert, animated: true, completion: nil)
+            }
+        }
+    }
+
+    func checkForMultiplayerGameOver() {
+        if gameCompleted == true {
+            return
+        }
+        let players = GameSessionManager.shared.sortedPlayersByScore()
+        if players.count != GameSessionManager.shared.matchPlayers.count {
+            return
+        }
+
+        var active = 0
+        for (_, (player, (score, _, completed))) in players.enumerated() {
+            if completed && player != GKLocalPlayer.local && score > 0 {
+                // lost
+                gameCompleted = true
+                self.score.setComplete()
+                showGameOver(won: false)
+                break
+            }
+            if !completed && player != GKLocalPlayer.local {
+                active += 1
+            }
+        }
+
+        if !gameCompleted && active == 0 {
+            // i'm the last standing player
+            gameCompleted = true
+            self.score.setComplete()
+            showGameOver(won: true)
         }
     }
 }

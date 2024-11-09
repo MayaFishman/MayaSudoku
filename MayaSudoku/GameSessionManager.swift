@@ -12,7 +12,7 @@ class GameSessionManager: NSObject, GKMatchDelegate, GKLocalPlayerListener {
     var partyCode: String?
     var isHost: Bool = false
     var matchPlayers: [GKPlayer] = []
-    var scores: [GKPlayer : Int] = [:]
+    var scores: [GKPlayer : (Int, Int, Bool)] = [:]
 
     static let shared = GameSessionManager()
 
@@ -25,12 +25,12 @@ class GameSessionManager: NSObject, GKMatchDelegate, GKLocalPlayerListener {
         match?.players ?? []
     }
 
-    func score(player: GKPlayer) -> Int {
-        return scores[player] ?? 0
+    func score(player: GKPlayer) -> (Int, Int, Bool) {
+        return scores[player] ?? (0, 0, false)
     }
 
-    func sortedPlayersByScore() -> [(GKPlayer, Int)] {
-        return scores.sorted { $0.value > $1.value }
+    func sortedPlayersByScore() -> [(GKPlayer, (Int, Int, Bool))] {
+        return scores.sorted { $0.value.0 > $1.value.0 }
     }
 
     func authenticatePlayer(completion: @escaping (Bool) -> Void) {
@@ -113,10 +113,10 @@ class GameSessionManager: NSObject, GKMatchDelegate, GKLocalPlayerListener {
         GKMatchmaker.shared().finishMatchmaking(for: match!)
         matchPlayers = connectedPlayers
         matchPlayers.append(GKLocalPlayer.local)
-        scores[GKLocalPlayer.local] = initialScore
+        scores[GKLocalPlayer.local] = (initialScore, 0, false)
 
         if isHost {
-            var jsonObject: [String: Any] = [
+            let jsonObject: [String: Any] = [
                 "msg": "startGame",
                 "player": GKLocalPlayer.local.displayName,
                 "solvedBoard":board.getSolved(),
@@ -130,15 +130,17 @@ class GameSessionManager: NSObject, GKMatchDelegate, GKLocalPlayerListener {
         }
     }
 
-    func sendScore(score: Int) {
-        var jsonObject: [String: Any] = [
+    func sendScore(score: Int, mistakes: Int, isComplete: Bool) {
+        let jsonObject: [String: Any] = [
             "msg": "scoreChanged",
             "score": score,
+            "mistakes": mistakes,
+            "complete": isComplete
         ]
 
         guard let data = try? JSONSerialization.data(withJSONObject: jsonObject, options: []) else { return }
         sendDataToAllPlayers(data: data)
-        scores[GKLocalPlayer.local] = score
+        scores[GKLocalPlayer.local] = (score, mistakes, isComplete)
     }
 
     // Cancel the session if needed
@@ -170,12 +172,18 @@ class GameSessionManager: NSObject, GKMatchDelegate, GKLocalPlayerListener {
                                   unsolvedBoard: jsonDict["unsolvedBoard"] as! [Int],
                                   initialScore: jsonDict["score"] as! Int)
                 for player in matchPlayers {
-                    scores[player] = jsonDict["score"] as? Int
+                    scores[player] = (
+                        jsonDict["score"] as? Int ?? 0,      // Default to 0 if score is nil
+                        jsonDict["mistakes"] as? Int ?? 0,    // Default to 0 if mistakes is nil
+                        jsonDict["complete"] as? Bool ?? false
+                    )
                 }
             } else if msg == "scoreChanged" {
                 let score = jsonDict["score"] as! Int
+                let mistakes = jsonDict["mistakes"] as! Int
+                let isComplete = jsonDict["complete"] as! Bool
                 print("Score changed to \(score)")
-                scores[player] = score
+                scores[player] = (score, mistakes, isComplete)
             }
         }
     }

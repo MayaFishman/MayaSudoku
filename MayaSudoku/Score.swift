@@ -1,14 +1,14 @@
 import Foundation
 
 protocol ScoreDelegate: AnyObject {
-    func scoreDidUpdate(newScore: Int)
+    func scoreDidUpdate(newScore: Int, mistakes: Int, completed: Bool)
 }
 
 class Score {
     weak var delegate: ScoreDelegate?
 
     public var maxMistakes: Int = 3
-    public var mistakePenalties = [20, 50, 100]
+    public var mistakePenalties = [100, 200, 400, 0]
     public var clueBonus: Int = 10
 
     private var timer: Timer?
@@ -17,12 +17,12 @@ class Score {
     private(set) var score: Int = 1000 {
         didSet {
             // If score becomes negative, set to 0 and complete the game
-            if score < 0 {
+            if score <= 0 {
                 score = 0
                 complete()
             } else {
                 // Notify the delegate whenever the score changes
-                delegate?.scoreDidUpdate(newScore: score)
+                delegate?.scoreDidUpdate(newScore: score, mistakes: mistakes, completed: isCompleted)
             }
         }
     }
@@ -32,7 +32,7 @@ class Score {
     }
 
     private(set) var mistakes: Int = 0
-    private var isCompleted: Bool = false
+    var isCompleted: Bool = false
 
     // Starts the timer to deduct 1 point per second
     private func startTimer() {
@@ -58,10 +58,15 @@ class Score {
         guard !isCompleted else { return }
         isCompleted = true
         timer?.invalidate()
+        delegate?.scoreDidUpdate(newScore: score, mistakes: mistakes, completed: isCompleted)
     }
 
     func start() {
         startTimer()
+    }
+
+    func setComplete() {
+        complete()
     }
 
     func addPointsForCorrectPlacement() {
@@ -72,13 +77,14 @@ class Score {
 
     // Handle mistakes with point deduction and limits
     func registerMistake() {
-        guard !isCompleted && mistakes < maxMistakes else { return }
+        guard !isCompleted else { return }
         score -= mistakePenalties[mistakes]
         mistakes += 1
 
         // Optional: Handle maximum mistakes reached if needed
-        if mistakes >= maxMistakes {
-            print("Maximum mistakes reached! You can't make more mistakes.")
+        if mistakes > maxMistakes {
+            print("Maximum mistakes reached!")
+            score = 0
         }
     }
 
