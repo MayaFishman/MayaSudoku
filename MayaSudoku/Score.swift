@@ -88,11 +88,6 @@ class Score {
         }
     }
 
-    func maxPossibleScore(remainingClues: Int) -> Int {
-        guard !isCompleted else { return score}
-        return score + remainingClues * clueBonus
-    }
-
     deinit {
         timer?.invalidate()
     }

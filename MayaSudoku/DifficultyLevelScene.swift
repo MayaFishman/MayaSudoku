@@ -27,6 +27,10 @@ class DifficultyLevelScene: SKScene {
         createDifficultyButton(text: "Medium", position: CGPoint(x: screenCenter.x, y: screenCenter.y + 50), difficulty: .intermediate)
         createDifficultyButton(text: "Hard", position: CGPoint(x: screenCenter.x, y: screenCenter.y - 50), difficulty: .hard)
         createDifficultyButton(text: "Very Hard", position: CGPoint(x: screenCenter.x, y: screenCenter.y - 150), difficulty: .veryHard)
+
+        let backButton = ButtonNode(text: "Back", position: CGPoint(x: screenCenter.x, y: size.height * 0.1))
+        backButton.onTap = { [weak self] in self?.onBack()}
+        addChild(backButton)
     }
 
     private func createDifficultyButton(text: String, position: CGPoint, difficulty: SudokuBoard.Difficulty) {
@@ -35,6 +39,13 @@ class DifficultyLevelScene: SKScene {
             self?.startSinglePlayerGame(difficulty: difficulty)
         }
         addChild(button)
+    }
+
+    private func onBack() {
+        let menu = MainMenuScene(size: self.size)
+        menu.scaleMode = .aspectFill
+        let transition = SKTransition.fade(withDuration: 0.5)
+        self.view?.presentScene(menu, transition: transition)
     }
 
     // Start Single Player Game with selected difficulty

@@ -13,6 +13,7 @@ class SudokuScene: SKScene, ScoreDelegate {
     private var gridSize: CGFloat = 0.0
     private var timerLabel: SKLabelNode!
     private var mistakesLabel: SKLabelNode!
+    private var scoreLabel: SKLabelNode!
     private var timer: Timer?
     private var elapsedTime: Int = 0
     private var quitButton: SKSpriteNode!
@@ -145,6 +146,17 @@ class SudokuScene: SKScene, ScoreDelegate {
         quitLabel.name = "quitButton"
         quitButton.addChild(quitLabel)
 
+        // Quit label setup
+        scoreLabel = SKLabelNode()
+        scoreLabel.fontName = "AvenirNext-Regular"
+        scoreLabel.fontSize = 20
+        scoreLabel.fontColor = .blue
+        scoreLabel.horizontalAlignmentMode = .center
+        scoreLabel.text = "Score: \(score.score)"
+        scoreLabel.zPosition = 10
+        scoreLabel.position =  CGPoint(x: (rightPosition.x+leftPosition.x)/2, y: rightPosition.y)
+        addChild(scoreLabel)
+
         // Start timer
         startTimer()
         score.start()
@@ -168,12 +180,10 @@ class SudokuScene: SKScene, ScoreDelegate {
 
     private func drawMultiplayerScore() {
         let players = GameSessionManager.shared.sortedPlayersByScore()
-
         let leftPosition = CGPoint(x: gridOrigin.x + 10, y: gridOrigin.y + gridSize + 20)
         let rightPosition = CGPoint(x: gridOrigin.x + gridSize - 10, y: gridOrigin.y + gridSize + 20)
-        let playersNodeRect = CGRect(x: leftPosition.x, y: leftPosition.y + 30,
-                        width: rightPosition.x - leftPosition.x, height: 90)
-        let verticalOffset = [playersNodeRect.height/4, playersNodeRect.height/4, -playersNodeRect.height/4, -playersNodeRect.height/4]
+        let playersNodeRect = CGRect(x: leftPosition.x, y: leftPosition.y + 20,
+                        width: rightPosition.x - leftPosition.x, height: 110)
 
         if playersNode == nil {
             playersNode = SKShapeNode(rect: playersNodeRect)
@@ -202,14 +212,13 @@ class SudokuScene: SKScene, ScoreDelegate {
             labelNode.position = CGPoint(x: playersNodeRect.minX, y: yPosition)
 
             let scoreLabelNode = SKLabelNode()
-            scoreLabelNode.text = ": \(score) / \(mistakes)"
-            scoreLabelNode.fontSize = 20
+            scoreLabelNode.text = score != 0 ? "\(score) / \(mistakes)": "FAIL / \(mistakes)"
+            scoreLabelNode.fontSize = 18
             scoreLabelNode.fontName = "AvenirNext-Regular"
-            scoreLabelNode.fontColor = .black
-            scoreLabelNode.horizontalAlignmentMode = .left
+            scoreLabelNode.fontColor = .blue
+            scoreLabelNode.horizontalAlignmentMode = .right
             scoreLabelNode.verticalAlignmentMode = .center
-
-            scoreLabelNode.position = CGPoint(x: labelNode.position.x + labelNode.frame.width, y: yPosition)
+            scoreLabelNode.position = CGPoint(x: playersNodeRect.maxX, y: yPosition)
 
             // Add the label node directly to the parent (e.g., the scene)
             playersNode.addChild(labelNode)
@@ -487,6 +496,12 @@ class SudokuScene: SKScene, ScoreDelegate {
         }
         myScore = newScore
         gameCompleted = completed
+
+        if newScore == 0 {
+            scoreLabel.text = "Score: FAIL"
+        } else {
+            scoreLabel.text = "Score: \(newScore)"
+        }
 
         if isMultiplayer {
             GameSessionManager.shared.sendScore(score: newScore, mistakes: mistakes, isComplete: completed)

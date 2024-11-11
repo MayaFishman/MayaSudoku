@@ -1,7 +1,31 @@
 {
   "images" : [
     {
-      "filename" : "sudoku.png",
+      "filename" : "sudoko 1.png",
+      "idiom" : "universal",
+      "platform" : "ios",
+      "size" : "1024x1024"
+    },
+    {
+      "appearances" : [
+        {
+          "appearance" : "luminosity",
+          "value" : "dark"
+        }
+      ],
+      "filename" : "sudoko 2.png",
+      "idiom" : "universal",
+      "platform" : "ios",
+      "size" : "1024x1024"
+    },
+    {
+      "appearances" : [
+        {
+          "appearance" : "luminosity",
+          "value" : "tinted"
+        }
+      ],
+      "filename" : "sudoko 3.png",
       "idiom" : "universal",
       "platform" : "ios",
       "size" : "1024x1024"

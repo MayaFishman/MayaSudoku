@@ -125,7 +125,7 @@ class GameSessionManager: NSObject, GKMatchDelegate, GKLocalPlayerListener {
             Task {
                 self.playersAdded = true
                 print("addPlayers", match!.players.count)
-                var request = GKMatchRequest()
+                let request = GKMatchRequest()
                 request.maxPlayers = 4
                 request.queueName = "com.maya.sudoko.PartyCodeQueue"
                 request.properties = ["partyCode": self.partyCode!]
