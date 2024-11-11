@@ -13,6 +13,8 @@ class GameSessionManager: NSObject, GKMatchDelegate, GKLocalPlayerListener {
     var isHost: Bool = false
     var matchPlayers: [GKPlayer] = []
     var scores: [GKPlayer : (Int, Int, Bool)] = [:]
+    var playersAdded: Bool = false
+    var gameStarted: Bool = false
 
     static let shared = GameSessionManager()
 
@@ -57,6 +59,7 @@ class GameSessionManager: NSObject, GKMatchDelegate, GKLocalPlayerListener {
         self.isHost = true
         print("Party Code for session: \(partyCode!)")
 
+        gameStarted = false
         GKMatchmaker.shared().cancel()
 
         let request = GKMatchRequest()
@@ -64,6 +67,7 @@ class GameSessionManager: NSObject, GKMatchDelegate, GKLocalPlayerListener {
         request.maxPlayers = 4
         request.queueName = "com.maya.sudoko.PartyCodeQueue"
         request.properties = ["partyCode": self.partyCode!]
+
 
         GKMatchmaker.shared().findMatch(for: request) { match, error in
             if let error = error {
@@ -77,22 +81,24 @@ class GameSessionManager: NSObject, GKMatchDelegate, GKLocalPlayerListener {
                 completion(.failure(error))
                 return
             }
-
             self.match = match
             self.match?.delegate = self
-            print("Match created. Waiting for players to join using the party code.")
+
+            print("Match created. Waiting for players to join using the party code, expected ", match.expectedPlayerCount )
             completion(.success(self.partyCode!))
         }
     }
 
     // Other players join the game session using the party code
     func joinGameSession(with partyCode: String, completion: @escaping (Result<GKMatch, Error>) -> Void) {
+        self.partyCode = partyCode
         let request = GKMatchRequest()
         request.minPlayers = 2
         request.maxPlayers = 4
         request.queueName = "com.maya.sudoko.PartyCodeQueue"
         request.properties = ["partyCode": partyCode]
 
+        gameStarted = false
         GKMatchmaker.shared().cancel()
 
         GKMatchmaker.shared().findMatch(for: request) { match, error in
@@ -101,16 +107,54 @@ class GameSessionManager: NSObject, GKMatchDelegate, GKLocalPlayerListener {
                 completion(.failure(error))
                 return
             }
+
             self.match = match
             self.match?.delegate = self
+
             print("Successfully joined match with party code: \(partyCode)")
             completion(.success(match!))
+
+            self.addPlayers()
+        }
+    }
+
+    // Workaround for matchmakier not working with more than 2 players, why???
+    private func addPlayers() {
+        guard self.match != nil && self.partyCode != nil && !playersAdded && !gameStarted else { return }
+        if match!.players.count < 4{
+            Task {
+                self.playersAdded = true
+                print("addPlayers", match!.players.count)
+                var request = GKMatchRequest()
+                request.maxPlayers = 4
+                request.queueName = "com.maya.sudoko.PartyCodeQueue"
+                request.properties = ["partyCode": self.partyCode!]
+                request.minPlayers = 3
+                do {
+                    try await GKMatchmaker.shared().addPlayers(to: match!, matchRequest: request)
+                } catch {
+                    print("Failed to add players to the match: \(error)")
+                    return
+                }
+                if gameStarted {
+                    return
+                }
+
+                request.minPlayers = 4
+                do {
+                    try await GKMatchmaker.shared().addPlayers(to: match!, matchRequest: request)
+                } catch {
+                    print("Failed to add players to the match: \(error)")
+                    return
+                }
+            }
         }
     }
 
     // Starts the match for all players (host calls this)
     func startMatch(board: SudokuBoard, initialScore: Int) {
         GKMatchmaker.shared().finishMatchmaking(for: match!)
+        gameStarted = true
         matchPlayers = connectedPlayers
         matchPlayers.append(GKLocalPlayer.local)
         scores[GKLocalPlayer.local] = (initialScore, 0, false)
@@ -166,6 +210,7 @@ class GameSessionManager: NSObject, GKMatchDelegate, GKLocalPlayerListener {
             if msg == "startGame" {
                 print("Starting game as guest...")
                 GKMatchmaker.shared().finishMatchmaking(for: match)
+                gameStarted = true
                 matchPlayers = connectedPlayers
                 matchPlayers.append(GKLocalPlayer.local)
                 notifyGameStarted(solvedBoard: jsonDict["solvedBoard"] as! [Int],
