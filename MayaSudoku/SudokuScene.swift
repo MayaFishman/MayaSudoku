@@ -23,6 +23,8 @@ class SudokuScene: SKScene, ScoreDelegate {
     private var gridOrigin: CGPoint!
     private var myScore: Int = 0
     private var gameCompleted: Bool = false
+    private var isNotes: Bool = false
+    private var notes: [Int:[Int]] = [:]
 
     var board: SudokuBoard?
     var isMultiplayer: Bool = false
@@ -101,8 +103,8 @@ class SudokuScene: SKScene, ScoreDelegate {
         checkAndRemoveNumbersCells()
 
         // Calculate left and right positions for the labels
-        let leftPosition = CGPoint(x: gridOrigin.x + 10, y: gridOrigin.y + gridSize + 20)
-        let rightPosition = CGPoint(x: gridOrigin.x + gridSize - 10, y: gridOrigin.y + gridSize + 20)
+        var leftPosition = CGPoint(x: gridOrigin.x + 10, y: gridOrigin.y + gridSize + 20)
+        var rightPosition = CGPoint(x: gridOrigin.x + gridSize - 10, y: gridOrigin.y + gridSize + 20)
 
         // Initialize and position timer label on the left side of the screen
         timerLabel = SKLabelNode(text: "Time: 00:00")
@@ -126,7 +128,7 @@ class SudokuScene: SKScene, ScoreDelegate {
 
         let buttonWidth: CGFloat = 100
         let buttonHeight: CGFloat = 40
-        quitButton = SKSpriteNode(color: .magenta, size: CGSize(width: buttonWidth, height: buttonHeight))
+        /*quitButton = SKSpriteNode(color: .magenta, size: CGSize(width: buttonWidth, height: buttonHeight))
         quitButton.position = CGPoint(x: leftPosition.x + buttonWidth / 2, y: leftPosition.y + 50) // Above timer
         if isMultiplayer {
             quitButton.position = CGPoint(x: leftPosition.x + buttonWidth / 2, y: leftPosition.y + 150) // Above timer
@@ -144,7 +146,7 @@ class SudokuScene: SKScene, ScoreDelegate {
         quitLabel.horizontalAlignmentMode = .center
         //quitLabel.position = CGPoint(x: 0, y: 0) // Centered within the button
         quitLabel.name = "quitButton"
-        quitButton.addChild(quitLabel)
+        quitButton.addChild(quitLabel)*/
 
         // Quit label setup
         scoreLabel = SKLabelNode()
@@ -156,6 +158,23 @@ class SudokuScene: SKScene, ScoreDelegate {
         scoreLabel.zPosition = 10
         scoreLabel.position =  CGPoint(x: (rightPosition.x+leftPosition.x)/2, y: rightPosition.y)
         addChild(scoreLabel)
+
+        if isMultiplayer {
+            leftPosition.y += 150
+            rightPosition.y += 150
+        }
+        let notesButton = TextureButtonNode(size: CGSize(width: buttonHeight, height: buttonHeight),
+                                            unpressed: "notes_black", pressed: "notes_blue",
+                                            mode: .toggle)
+        notesButton.position = CGPoint(x: leftPosition.x + buttonHeight/2, y: leftPosition.y + 50)
+        notesButton.action = handleModeButton
+        addChild(notesButton)
+
+        let quitButton = TextureButtonNode(size: CGSize(width: buttonHeight, height: buttonHeight),
+                                           unpressed: "exit_black", pressed: "exit_blue")
+        quitButton.position = CGPoint(x: rightPosition.x - buttonHeight/2, y: rightPosition.y + 50)
+        quitButton.action = handleQuitButton
+        addChild(quitButton)
 
         // Start timer
         startTimer()
@@ -228,6 +247,7 @@ class SudokuScene: SKScene, ScoreDelegate {
 
     private func drawSudokuBoardCell(index: Int, value: Int) {
         let cell = cells[index]
+        cell!.removeAllChildren()
 
         // If the cell contains a non-zero value, display it
         if value != 0 {
@@ -241,9 +261,24 @@ class SudokuScene: SKScene, ScoreDelegate {
             numberLabel.zPosition = 2 // Above the cell background
 
             cell!.addChild(numberLabel)
+        } else {
+            if let numbers = notes[index] {
+                for num in numbers {
+                    let noteLabel = SKLabelNode(text: "\(num)")
+                    noteLabel.fontName = "AvenirNext-Regular"
+                    noteLabel.fontSize = 16
+                    noteLabel.fontColor = .gray
+                    noteLabel.verticalAlignmentMode = .center
+                    noteLabel.horizontalAlignmentMode = .center
+                    let x = gridSize / 27.0 * (CGFloat((num-1)%3) - 1)
+                    let y = gridSize / 27.0 * (CGFloat((9-num)/3) - 1)
+                    noteLabel.position = CGPoint(x: x, y: y)
+                    noteLabel.zPosition = 2 // Above the cell background
+                    cell!.addChild(noteLabel)
+                }
+            }
         }
     }
-
 
     private func drawSudokuBoard() {
         guard let boardValues = board?.getUnsolved() else { return }
@@ -387,11 +422,6 @@ class SudokuScene: SKScene, ScoreDelegate {
         let location = touch.location(in: self)
         var touchedNode = atPoint(location)
 
-        if touchedNode.name == "quitButton" {
-            handleQuitButton()
-            return
-        }
-
         if gameCompleted {
             return
         }
@@ -433,7 +463,20 @@ class SudokuScene: SKScene, ScoreDelegate {
                         return
                     }
 
-                    if board!.setValue(index: index, val: val) {
+                    if isNotes && boardValues[index] == 0 {
+                        if var numbers = notes[index], numbers.contains(val) {
+                            numbers.removeAll { $0 == val }
+                            notes[index] = numbers
+                        } else {
+                            if var numbers = notes[index] {
+                                numbers.append(val)
+                                notes[index] = numbers
+                            } else {
+                                notes[index] = [val]
+                            }
+                        }
+                        drawSudokuBoardCell(index: index, value: 0)
+                    } else if board!.setValue(index: index, val: val) {
                         print("great success!")
                         score.addPointsForCorrectPlacement()
 
@@ -488,6 +531,17 @@ class SudokuScene: SKScene, ScoreDelegate {
         let transition = SKTransition.fade(withDuration: 0.5)
         let mainMenuScene = MainMenuScene(size: self.size)
         self.view?.presentScene(mainMenuScene, transition: transition)
+    }
+
+    private func handleModeButton() {
+        if gameCompleted {
+            return
+        }
+        if isNotes {
+            isNotes = false
+        } else {
+            isNotes = true
+        }
     }
 
     func scoreDidUpdate(newScore: Int, mistakes: Int, completed: Bool) {
