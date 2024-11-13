@@ -18,6 +18,12 @@ class TextureButtonNode: SKSpriteNode {
     var mode: ButtonMode
     private var currentState: ButtonState = .unpressed
 
+    private(set) var isEnabled: Bool = true {
+        didSet {
+            updateAppearanceForState()
+        }
+    }
+
     // Initialize with size and mode
     init(size: CGSize, unpressed: String, pressed: String, mode: ButtonMode = .regular) {
         self.unpressedTexture = SKTexture(imageNamed: unpressed)
@@ -45,6 +51,7 @@ class TextureButtonNode: SKSpriteNode {
     }
 
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        guard isEnabled else { return }
         if mode == .regular {
             setState(.pressed)
         } else if mode == .toggle {
@@ -55,6 +62,7 @@ class TextureButtonNode: SKSpriteNode {
     }
 
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+        guard isEnabled else { return }
         if mode == .regular {
             setState(.unpressed)
         }
@@ -66,8 +74,23 @@ class TextureButtonNode: SKSpriteNode {
     }
 
     override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
+        guard isEnabled else { return }
         if mode == .regular {
             setState(.unpressed)
         }
+    }
+
+    // Method to enable the button
+    func enable() {
+        isEnabled = true
+    }
+
+    // Method to disable the button
+    func disable() {
+        isEnabled = false
+        setState(.unpressed)
+    }
+
+    private func updateAppearanceForState() {
     }
 }

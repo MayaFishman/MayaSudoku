@@ -61,6 +61,8 @@ class GameSessionManager: NSObject, GKMatchDelegate, GKLocalPlayerListener {
 
         gameStarted = false
         GKMatchmaker.shared().cancel()
+        match?.disconnect()
+        match?.delegate = nil
 
         let request = GKMatchRequest()
         request.minPlayers = 2
@@ -100,6 +102,8 @@ class GameSessionManager: NSObject, GKMatchDelegate, GKLocalPlayerListener {
 
         gameStarted = false
         GKMatchmaker.shared().cancel()
+        match?.disconnect()
+        match?.delegate = nil
 
         GKMatchmaker.shared().findMatch(for: request) { match, error in
             if let error = error {
@@ -256,6 +260,11 @@ class GameSessionManager: NSObject, GKMatchDelegate, GKLocalPlayerListener {
         } catch {
             print("Error sending data: \(error.localizedDescription)")
         }
+    }
+
+    func disconnect() {
+        match?.disconnect()
+        match?.delegate = nil
     }
 
     // MARK: - GKLocalPlayerListener Method for accepting invitations

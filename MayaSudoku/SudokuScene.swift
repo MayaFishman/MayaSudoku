@@ -25,10 +25,20 @@ class SudokuScene: SKScene, ScoreDelegate {
     private var gameCompleted: Bool = false
     private var isNotes: Bool = false
     private var notes: [Int:[Int]] = [:]
+    private var notesButton: TextureButtonNode? = nil
+    private var fireworksHost: UIView? = nil
 
     var board: SudokuBoard?
     var isMultiplayer: Bool = false
     var isMultiplayerHost: Bool = false
+
+    deinit {
+        timer?.invalidate()
+        score.delegate = nil
+        score.setComplete()
+        fireworksHost?.removeFromSuperview()
+        fireworksHost = nil
+    }
 
     override func didMove(to view: SKView) {
         // Adjust grid size based on device type
@@ -104,7 +114,7 @@ class SudokuScene: SKScene, ScoreDelegate {
 
         // Calculate left and right positions for the labels
         var leftPosition = CGPoint(x: gridOrigin.x + 10, y: gridOrigin.y + gridSize + 20)
-        var rightPosition = CGPoint(x: gridOrigin.x + gridSize - 10, y: gridOrigin.y + gridSize + 20)
+        var rightPosition = CGPoint(x: gridOrigin.x + gridSize - 10, y: leftPosition.y)
 
         // Initialize and position timer label on the left side of the screen
         timerLabel = SKLabelNode(text: "Time: 00:00")
@@ -127,26 +137,26 @@ class SudokuScene: SKScene, ScoreDelegate {
         addChild(mistakesLabel)
 
         let buttonWidth: CGFloat = 100
-        let buttonHeight: CGFloat = 40
+        let buttonHeight: CGFloat = 36
         /*quitButton = SKSpriteNode(color: .magenta, size: CGSize(width: buttonWidth, height: buttonHeight))
-        quitButton.position = CGPoint(x: leftPosition.x + buttonWidth / 2, y: leftPosition.y + 50) // Above timer
-        if isMultiplayer {
-            quitButton.position = CGPoint(x: leftPosition.x + buttonWidth / 2, y: leftPosition.y + 150) // Above timer
-        }
-        quitButton.zPosition = 10
-        quitButton.name = "quitButton" // Name for touch detection
-        addChild(quitButton)
+         quitButton.position = CGPoint(x: leftPosition.x + buttonWidth / 2, y: leftPosition.y + 50) // Above timer
+         if isMultiplayer {
+         quitButton.position = CGPoint(x: leftPosition.x + buttonWidth / 2, y: leftPosition.y + 150) // Above timer
+         }
+         quitButton.zPosition = 10
+         quitButton.name = "quitButton" // Name for touch detection
+         addChild(quitButton)
 
-        // Quit label setup
-        quitLabel = SKLabelNode(text: "Quit")
-        quitLabel.fontName = "AvenirNext-Regular"
-        quitLabel.fontSize = 20
-        quitLabel.fontColor = .white
-        quitLabel.verticalAlignmentMode = .center
-        quitLabel.horizontalAlignmentMode = .center
-        //quitLabel.position = CGPoint(x: 0, y: 0) // Centered within the button
-        quitLabel.name = "quitButton"
-        quitButton.addChild(quitLabel)*/
+         // Quit label setup
+         quitLabel = SKLabelNode(text: "Quit")
+         quitLabel.fontName = "AvenirNext-Regular"
+         quitLabel.fontSize = 20
+         quitLabel.fontColor = .white
+         quitLabel.verticalAlignmentMode = .center
+         quitLabel.horizontalAlignmentMode = .center
+         //quitLabel.position = CGPoint(x: 0, y: 0) // Centered within the button
+         quitLabel.name = "quitButton"
+         quitButton.addChild(quitLabel)*/
 
         // Quit label setup
         scoreLabel = SKLabelNode()
@@ -160,15 +170,15 @@ class SudokuScene: SKScene, ScoreDelegate {
         addChild(scoreLabel)
 
         if isMultiplayer {
-            leftPosition.y += 150
-            rightPosition.y += 150
+            leftPosition.y += 120
+            rightPosition.y += 120
         }
-        let notesButton = TextureButtonNode(size: CGSize(width: buttonHeight, height: buttonHeight),
-                                            unpressed: "notes_black", pressed: "notes_blue",
-                                            mode: .toggle)
-        notesButton.position = CGPoint(x: leftPosition.x + buttonHeight/2, y: leftPosition.y + 50)
-        notesButton.action = handleModeButton
-        addChild(notesButton)
+        notesButton = TextureButtonNode(size: CGSize(width: buttonHeight, height: buttonHeight),
+                                        unpressed: "notes_black", pressed: "notes_blue",
+                                        mode: .toggle)
+        notesButton!.position = CGPoint(x: leftPosition.x + buttonHeight/2, y: leftPosition.y + 50)
+        notesButton!.action = handleModeButton
+        addChild(notesButton!)
 
         let quitButton = TextureButtonNode(size: CGSize(width: buttonHeight, height: buttonHeight),
                                            unpressed: "exit_black", pressed: "exit_blue")
@@ -202,7 +212,7 @@ class SudokuScene: SKScene, ScoreDelegate {
         let leftPosition = CGPoint(x: gridOrigin.x + 10, y: gridOrigin.y + gridSize + 20)
         let rightPosition = CGPoint(x: gridOrigin.x + gridSize - 10, y: gridOrigin.y + gridSize + 20)
         let playersNodeRect = CGRect(x: leftPosition.x, y: leftPosition.y + 20,
-                        width: rightPosition.x - leftPosition.x, height: 110)
+                                     width: rightPosition.x - leftPosition.x, height: 110)
 
         if playersNode == nil {
             playersNode = SKShapeNode(rect: playersNodeRect)
@@ -527,6 +537,10 @@ class SudokuScene: SKScene, ScoreDelegate {
     private func handleQuitButton() {
         // Logic to handle quit action, e.g., transitioning to a main menu scene
         print("Quit button pressed.")
+        if isMultiplayer {
+            GameSessionManager.shared.disconnect()
+        }
+
 
         let transition = SKTransition.fade(withDuration: 0.5)
         let mainMenuScene = MainMenuScene(size: self.size)
@@ -563,9 +577,11 @@ class SudokuScene: SKScene, ScoreDelegate {
 
         if completed {
             timer?.invalidate()
+            notesButton?.disable()
             print("Game Completed!")
 
             if myScore > 0 {
+                createFireworks()
                 showGameOver(won: true)
             } else {
                 showGameOver(won: false)
@@ -618,7 +634,91 @@ class SudokuScene: SKScene, ScoreDelegate {
             // i'm the last standing player
             gameCompleted = true
             self.score.setComplete()
+            createFireworks()
             showGameOver(won: true)
+        }
+    }
+
+    func createFireworks(){
+        fireworksHost = UIView(frame: CGRect(x: 0.0, y: 0.0, width: size.width, height: size.height))
+        self.view?.addSubview(fireworksHost!)
+
+        let particlesLayer = CAEmitterLayer()
+        particlesLayer.frame = CGRect(x: 0.0, y: 0.0, width: size.width, height: size.height)
+
+        fireworksHost!.layer.addSublayer(particlesLayer)
+        fireworksHost!.layer.masksToBounds = true
+        fireworksHost!.backgroundColor = UIColor(red: 1.0, green: 1.0, blue: 1.0, alpha: 0.0)
+
+        particlesLayer.backgroundColor = UIColor(red: 0.0/255.0, green: 0.0/255.0, blue: 0.0/255.0, alpha: 0).cgColor
+        particlesLayer.emitterShape = .point
+        particlesLayer.emitterPosition = CGPoint(x: size.width/2, y: size.height * 0.8)
+        particlesLayer.emitterSize = CGSize(width: 0.0, height: 0.0)
+        particlesLayer.emitterMode = .outline
+        particlesLayer.renderMode = .additive
+
+        let cell1 = CAEmitterCell()
+
+        cell1.name = "Parent"
+        cell1.birthRate = 5.0
+        cell1.lifetime = 2.5
+        cell1.velocity = 300.0
+        cell1.velocityRange = 100.0
+        cell1.yAcceleration = -100.0
+        cell1.emissionLongitude = -90.0 * (.pi / 180.0)
+        cell1.emissionRange = 45.0 * (.pi / 180.0)
+        cell1.scale = 0.0
+        cell1.color = UIColor(red: 255.0/255.0, green: 255.0/255.0, blue: 255.0/255.0, alpha: 1.0).cgColor
+        cell1.redRange = 0.9
+        cell1.greenRange = 0.9
+        cell1.blueRange = 0.9
+
+        let image1_1 = UIImage(named: "Spark")?.cgImage
+
+        let subcell1_1 = CAEmitterCell()
+        subcell1_1.contents = image1_1
+        subcell1_1.name = "Trail"
+        subcell1_1.birthRate = 45.0
+        subcell1_1.lifetime = 0.5
+        subcell1_1.beginTime = 0.01
+        subcell1_1.duration = 1.7
+        subcell1_1.velocity = 80.0
+        subcell1_1.velocityRange = 100.0
+        subcell1_1.xAcceleration = 100.0
+        subcell1_1.yAcceleration = 350.0
+        subcell1_1.emissionLongitude = -360.0 * (.pi / 180.0)
+        subcell1_1.emissionRange = 22.5 * (.pi / 180.0)
+        subcell1_1.scale = 0.5
+        subcell1_1.scaleSpeed = 0.13
+        subcell1_1.alphaSpeed = -0.7
+        subcell1_1.color = UIColor(red: 255.0/255.0, green: 255.0/255.0, blue: 255.0/255.0, alpha: 1.0).cgColor
+
+
+
+        let image1_2 = UIImage(named: "Spark")?.cgImage
+
+        let subcell1_2 = CAEmitterCell()
+        subcell1_2.contents = image1_2
+        subcell1_2.name = "Firework"
+        subcell1_2.birthRate = 20000.0
+        subcell1_2.lifetime = 15.0
+        subcell1_2.beginTime = 1.6
+        subcell1_2.duration = 0.1
+        subcell1_2.velocity = 190.0
+        subcell1_2.yAcceleration = 80.0
+        subcell1_2.emissionRange = 360.0 * (.pi / 180.0)
+        subcell1_2.spin = 114.6 * (.pi / 180.0)
+        subcell1_2.scale = 0.1
+        subcell1_2.scaleSpeed = 0.09
+        subcell1_2.alphaSpeed = -0.7
+        subcell1_2.color = UIColor(red: 255.0/255.0, green: 255.0/255.0, blue: 255.0/255.0, alpha: 1.0).cgColor
+
+        cell1.emitterCells = [subcell1_1, subcell1_2]
+
+        particlesLayer.emitterCells = [cell1]
+        Timer.scheduledTimer(withTimeInterval: 5.0, repeats: false) { _ in
+            self.fireworksHost?.removeFromSuperview()
+            self.fireworksHost = nil
         }
     }
 }
