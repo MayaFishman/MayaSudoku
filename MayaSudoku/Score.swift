@@ -65,6 +65,10 @@ class Score {
         startTimer()
     }
 
+    func pause() {
+        timer?.invalidate()
+    }
+
     func setComplete() {
         complete()
     }

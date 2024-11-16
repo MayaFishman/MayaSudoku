@@ -17,31 +17,35 @@ class SudokuBoard {
     }
     init() {}
 
-    static func checkBoard(_ board: [Int], _ i: Int, _ n: Int) -> Bool {
-        let row = i / 9
-        let col = i % 9
+    static func getCellsToCheck(index: Int) -> [Int] {
+        var cells: [Int] = []
+        let row = index / 9
+        let col = index % 9
 
         // check column
         for c in 0..<9 {
-            if board[row * 9 + c] == n {
-                return false
-            }
+            cells.append(row * 9 + c)
         }
-        // check row
         for r in 0..<9 {
-            if board[r * 9 + col] == n {
-                return false
-            }
+            cells.append(r * 9 + col)
         }
 
-        // check 3x3 box
         let boxRow = (row / 3) * 3
         let boxCol = (col / 3) * 3
         for r in boxRow..<(boxRow + 3) {
             for c in boxCol..<(boxCol + 3) {
-                if board[r * 9 + c] == n {
-                    return false
-                }
+                cells.append(r * 9 + c)
+            }
+        }
+
+        return cells
+    }
+
+    static func checkBoard(_ board: [Int], _ i: Int, _ n: Int) -> Bool {
+        // check column, row and box
+        for c in getCellsToCheck(index: i) {
+            if board[c] == n {
+                return false
             }
         }
 

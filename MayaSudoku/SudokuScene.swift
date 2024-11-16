@@ -18,7 +18,7 @@ class SudokuScene: SKScene, ScoreDelegate {
     private var elapsedTime: Int = 0
     private var quitButton: SKSpriteNode!
     private var quitLabel: SKLabelNode! // Quit label
-    private var cells: [SKNode?] = Array(repeating: nil, count: 81)
+    private var cells: [SKShapeNode?] = Array(repeating: nil, count: 81)
     private var playersNode: SKShapeNode!
     private var gridOrigin: CGPoint!
     private var myScore: Int = 0
@@ -27,6 +27,7 @@ class SudokuScene: SKScene, ScoreDelegate {
     private var notes: [Int:[Int]] = [:]
     private var notesButton: TextureButtonNode? = nil
     private var fireworksHost: UIView? = nil
+    private var isTimerPaused: Bool = false
 
     var board: SudokuBoard?
     var isMultiplayer: Bool = false
@@ -41,9 +42,14 @@ class SudokuScene: SKScene, ScoreDelegate {
         if isMultiplayer {
             GameSessionManager.shared.cancelSession()
         }
+        NotificationCenter.default.removeObserver(self, name: UIApplication.willResignActiveNotification, object: nil)
+        NotificationCenter.default.removeObserver(self, name: UIApplication.didBecomeActiveNotification, object: nil)
     }
 
     override func didMove(to view: SKView) {
+        NotificationCenter.default.addObserver(self, selector: #selector(pauseTimer), name: UIApplication.willResignActiveNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(resumeTimer), name: UIApplication.didBecomeActiveNotification, object: nil)
+
         // Adjust grid size based on device type
         gridSize = min(size.width, size.height) * (UIDevice.current.userInterfaceIdiom == .pad ? 0.85 : 1)
 
@@ -119,106 +125,78 @@ class SudokuScene: SKScene, ScoreDelegate {
         var leftPosition = CGPoint(x: gridOrigin.x + 10, y: gridOrigin.y + gridSize + 20)
         var rightPosition = CGPoint(x: gridOrigin.x + gridSize - 10, y: leftPosition.y)
 
-        let totalLabels = 4
-        let labelTexts = ["Time",  "Difficulty", "Score", "Mistakes"]
-        var labels: [SKLabelNode] = []
+        timerLabel = SKLabelNode(text: "00:00")
+        let difficultyLabel = SKLabelNode(text: "\(self.difficulty.rawValue)")
+        scoreLabel =  SKLabelNode(text: "\(score.score)")
+        mistakesLabel = SKLabelNode(text:  "0/\(score.maxMistakes)")
+        // Define the labels and their initial text
+        let labelData = [
+            ("Time", timerLabel),
+            ("Difficulty", difficultyLabel),
+            ("Score",  scoreLabel),
+            ("Mistakes", mistakesLabel)
+        ]
 
         // Calculate spacing considering label width
-        let sampleLabel = SKLabelNode(text: labelTexts[0])
+        let sampleLabel = SKLabelNode(text: labelData[0].0)
         sampleLabel.fontName = "AvenirNext-Bold"
         sampleLabel.fontSize = 17
         leftPosition.x += sampleLabel.frame.width/2
 
-        sampleLabel.text = labelTexts[3]
+        sampleLabel.text = labelData[3].0
         rightPosition.x -= sampleLabel.frame.width/2
 
         let totalSpacing = (rightPosition.x - leftPosition.x)
-        let labelSpacing = totalSpacing / CGFloat(totalLabels - 1)
+        let labelSpacing = totalSpacing / CGFloat(labelData.count - 1)
 
-        for (index, text) in labelTexts.enumerated() {
-            let label = SKLabelNode()
-            label.text = text
+        for (index, (labelText, valueLabel)) in labelData.enumerated() {
+            let label = SKLabelNode(text: labelText)
             label.fontName = "AvenirNext-Bold"
             label.fontSize = 17
             label.fontColor = .black
             label.horizontalAlignmentMode = .center
             label.zPosition = 10
 
-            // Calculate the x position dynamically, adjusting for label width
+            // Calculate the x position dynamically
             let xPosition = leftPosition.x + CGFloat(index) * labelSpacing
             label.position = CGPoint(x: xPosition, y: leftPosition.y + 30)
             addChild(label)
-            labels.append(label)
+
+            // Create and configure the corresponding value label
+            valueLabel!.fontName = "AvenirNext-Regular"
+            valueLabel!.fontSize = 17
+            valueLabel!.fontColor = (labelText == "Mistakes") ? SKColor(red: 1.0, green: 0.3, blue: 0.3, alpha: 1.0) : .black
+            valueLabel!.horizontalAlignmentMode = .center
+            valueLabel!.zPosition = 10
+
+            // Position value labels below their respective titles
+            valueLabel!.position = CGPoint(x: xPosition, y: leftPosition.y)
+            addChild(valueLabel!)
         }
-
-        // Initialize and position timer label on the left side of the screen
-        timerLabel = SKLabelNode(text: "00:00")
-        timerLabel.fontName = "AvenirNext-Regular"
-        timerLabel.fontSize = 17
-        timerLabel.fontColor = .black
-        var xPosition = leftPosition.x
-        timerLabel.position = CGPoint(x: xPosition, y: leftPosition.y)
-        timerLabel.position = leftPosition // Set to left half
-        timerLabel.zPosition = 10
-        addChild(timerLabel)
-
-
-        // Initialize and position mistakes label on the right side of the screen
-        mistakesLabel = SKLabelNode()
-        mistakesLabel.text = "0/\(score.maxMistakes)"
-        mistakesLabel.fontName = "AvenirNext-Regular"
-        mistakesLabel.fontSize = 17
-        mistakesLabel.fontColor = SKColor(red: 1.0, green: 0.3, blue: 0.3, alpha: 1.0)
-        xPosition = leftPosition.x + CGFloat(3)*labelSpacing
-        mistakesLabel.position = CGPoint(x: xPosition, y: leftPosition.y)
-        mistakesLabel.zPosition = 10
-        addChild(mistakesLabel)
 
         let bottomColor = UIColor(red: 0.95, green: 0.95, blue: 1.0, alpha: 1.0)
         let topColor = UIColor(red: 0.7, green: 0.85, blue: 1.0, alpha: 1.0)
-        let bar = createGradientNode(size: CGSize(width: size.width - 10, height: 80), topColor: topColor, bottomColor: bottomColor)
+        let bar = createGradientNode(size: CGSize(width: gridSize, height: 80), topColor: topColor, bottomColor: bottomColor)
+        bar.position = CGPoint(x:frame.midX, y:60)
         bar.position = CGPoint(x:frame.midX, y:60)
         addChild(bar)
 
         let buttonSize: CGFloat = 45
-
-        scoreLabel = SKLabelNode()
-        scoreLabel.fontName = "AvenirNext-Regular"
-        scoreLabel.fontSize = 17
-        scoreLabel.fontColor = .black
-        scoreLabel.horizontalAlignmentMode = .center
-        scoreLabel.text = "\(score.score)"
-        scoreLabel.zPosition = 10
-        xPosition = leftPosition.x + CGFloat(2)*labelSpacing
-        scoreLabel.position = CGPoint(x: xPosition, y: leftPosition.y)
-        addChild(scoreLabel)
-
-        let difficultyLabel = SKLabelNode()
-        difficultyLabel.fontName = "AvenirNext-Regular"
-        difficultyLabel.fontSize = 17
-        difficultyLabel.fontColor = .black
-        difficultyLabel.horizontalAlignmentMode = .center
-        difficultyLabel.text = "\(self.difficulty.rawValue)"
-        difficultyLabel.zPosition = 10
-        xPosition = leftPosition.x + CGFloat(1)*labelSpacing
-        difficultyLabel.position = CGPoint(x: xPosition, y: leftPosition.y)
-        addChild(difficultyLabel)
-
-        leftPosition.x = gridOrigin.x + 25
-        rightPosition.x = gridOrigin.x + gridSize - 25
-        let buttonPositionLeft = CGPoint(x:leftPosition.x, y: 60)
-        let buttonPositionRight = CGPoint(x:rightPosition.x, y: 60)
+        let cellSize = gridSize / 9.0
+        let startX = gridOrigin.x + cellSize / 2
+        let buttonPositionLeft = CGPoint(x: (gridOrigin.x > 0 ? startX : startX + cellSize/2), y: 60)
+        let buttonPositionRight = CGPoint(x: (gridOrigin.x > 0 ? startX + CGFloat(8) * cellSize : startX + CGFloat(8) * cellSize - cellSize/2), y: 60)
 
         notesButton = TextureButtonNode(size: CGSize(width: buttonSize, height: buttonSize),
                                         unpressed: "notes_black", pressed: "notes_blue",
                                         mode: .toggle)
-        notesButton!.position = CGPoint(x: buttonPositionLeft.x + buttonSize/2, y: buttonPositionLeft.y)
+        notesButton!.position = CGPoint(x: buttonPositionLeft.x, y: buttonPositionLeft.y)
         notesButton!.action = handleModeButton
         addChild(notesButton!)
 
         let quitButton = TextureButtonNode(size: CGSize(width: buttonSize, height: buttonSize),
                                            unpressed: "exit_black", pressed: "exit_blue")
-        quitButton.position = CGPoint(x: buttonPositionRight.x - buttonSize/2, y: buttonPositionRight.y)
+        quitButton.position = CGPoint(x: buttonPositionRight.x, y: buttonPositionRight.y)
         quitButton.action = handleQuitButton
         addChild(quitButton)
 
@@ -384,7 +362,7 @@ class SudokuScene: SKScene, ScoreDelegate {
     private func drawNumberCells() {
         // Size and spacing of the number cells
         let cellSize = gridSize / 9.0
-        let bottomOffset = UIDevice.current.userInterfaceIdiom == .pad ? gridOrigin.y - cellSize + 30 : gridOrigin.y - cellSize - 10 // Space below the grid for number cells
+        let bottomOffset = gridOrigin.y - 55
 
         let startX = (size.width - gridSize) / 2 + cellSize / 2
 
@@ -427,22 +405,17 @@ class SudokuScene: SKScene, ScoreDelegate {
     }
 
     func clearCells() {
-        // Clear any previous highlights
-        for child in children {
-            if let cell = child as? SKShapeNode, cell.name?.starts(with: "cell_") == true {
-                cell.fillColor = .white // Reset color to default
-            }
+        for cell in cells {
+            cell!.fillColor = .white
         }
     }
 
     func highlightCellsWithVal(val: Int) {
-        // Highlight cells with the specified value
-        for child in children {
-            if let cell = child as? SKShapeNode, cell.name?.starts(with: "cell_") == true {
-                // Check if the cell contains the specified value
-                if let label = cell.children.first as? SKLabelNode, label.text == "\(val)" {
-                    cell.fillColor = CellSelectionColor
-                }
+        guard let boardValues = board?.getUnsolved() else { return }
+        for cell in cells {
+            let index = cellToIndex(cell: cell!)
+            if boardValues[index] == val {
+                cell!.fillColor = CellSelectionColor
             }
         }
     }
@@ -529,11 +502,11 @@ class SudokuScene: SKScene, ScoreDelegate {
                         let shake = SKAction.sequence([
                             SKAction.run {
                                 // remove notes for val
-                                for (key, var numbers) in self.notes {
-                                    if numbers.contains(val) {
+                                for c in SudokuBoard.getCellsToCheck(index: index) {
+                                    if var numbers = self.notes[c], numbers.contains(val) {
                                         numbers.removeAll { $0 == val }
-                                        self.notes[key] = numbers
-                                        self.drawSudokuBoardCell(index: key, value: boardValues[key])
+                                        self.notes[c] = numbers
+                                        self.drawSudokuBoardCell(index: c, value: boardValues[c])
                                     }
                                 }
                                 self.drawSudokuBoardCell(index: index, value: val)
@@ -765,5 +738,21 @@ class SudokuScene: SKScene, ScoreDelegate {
             self.fireworksHost?.removeFromSuperview()
             self.fireworksHost = nil
         }
+    }
+
+    @objc private func pauseTimer() {
+        guard timer != nil && !isTimerPaused else { return }
+        timer?.invalidate()
+        score.pause()
+        isTimerPaused = true
+    }
+
+    @objc private func resumeTimer() {
+        guard isTimerPaused else { return }
+
+        // Restart the timer
+        startTimer()
+        score.start()
+        isTimerPaused = false
     }
 }
