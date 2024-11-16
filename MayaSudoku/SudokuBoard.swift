@@ -2,10 +2,10 @@ import Foundation
 
 class SudokuBoard {
     enum Difficulty: String {
-        case beginner
-        case intermediate
-        case hard
-        case veryHard = "very hard"
+        case beginner = "easy"
+        case intermediate = "medium"
+        case hard = "hard"
+        case veryHard = "expert"
     }
 
     private var solvedBoard: [Int] = Array(repeating: 0, count: 81)

@@ -19,6 +19,7 @@
 		3C5E50002CCD04F400668FBD /* SudokuScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C5E4FFF2CCD04F400668FBD /* SudokuScene.swift */; };
 		3C5E50022CD61D1500668FBD /* SudokuBoard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C5E50012CD61D1500668FBD /* SudokuBoard.swift */; };
 		3C5E50042CD6251D00668FBD /* WaitingScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C5E50032CD6251D00668FBD /* WaitingScene.swift */; };
+		AA379E8A2CE5061B0061149C /* Util.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA379E892CE506180061149C /* Util.swift */; };
 		AA81B7542CE2A55A003C2966 /* TextureButtonNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA81B7532CE2A54A003C2966 /* TextureButtonNode.swift */; };
 		AA85FF7A2CDA5E3700E03112 /* entitlements.plist in Resources */ = {isa = PBXBuildFile; fileRef = AA85FF792CDA5E3700E03112 /* entitlements.plist */; };
 		AA85FF802CDB903900E03112 /* ButtonNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA85FF7F2CDB903400E03112 /* ButtonNode.swift */; };
@@ -46,6 +47,7 @@
 		3C5E4FFF2CCD04F400668FBD /* SudokuScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SudokuScene.swift; sourceTree = "<group>"; };
 		3C5E50012CD61D1500668FBD /* SudokuBoard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SudokuBoard.swift; sourceTree = "<group>"; };
 		3C5E50032CD6251D00668FBD /* WaitingScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaitingScene.swift; sourceTree = "<group>"; };
+		AA379E892CE506180061149C /* Util.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Util.swift; sourceTree = "<group>"; };
 		AA81B7532CE2A54A003C2966 /* TextureButtonNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextureButtonNode.swift; sourceTree = "<group>"; };
 		AA85FF792CDA5E3700E03112 /* entitlements.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = entitlements.plist; sourceTree = "<group>"; };
 		AA85FF7F2CDB903400E03112 /* ButtonNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ButtonNode.swift; sourceTree = "<group>"; };
@@ -92,6 +94,7 @@
 		3C5E4FE32CCCDFC100668FBD /* MayaSudoku */ = {
 			isa = PBXGroup;
 			children = (
+				AA379E892CE506180061149C /* Util.swift */,
 				AA81B7532CE2A54A003C2966 /* TextureButtonNode.swift */,
 				AACA14412CDD2D9F001E4D54 /* MulltiplayerWaitForGame.swift */,
 				AACA14432CDE6C62001E4D54 /* Score.swift */,
@@ -193,6 +196,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				AA85FF822CDBA07100E03112 /* MultiplayerNewScene.swift in Sources */,
+				AA379E8A2CE5061B0061149C /* Util.swift in Sources */,
 				3C5E50042CD6251D00668FBD /* WaitingScene.swift in Sources */,
 				AA81B7542CE2A55A003C2966 /* TextureButtonNode.swift in Sources */,
 				AACA14442CDE6C65001E4D54 /* Score.swift in Sources */,

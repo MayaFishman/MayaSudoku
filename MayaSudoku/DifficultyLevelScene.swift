@@ -26,7 +26,7 @@ class DifficultyLevelScene: SKScene {
         createDifficultyButton(text: "Easy", position: CGPoint(x: screenCenter.x, y: screenCenter.y + 150), difficulty: .beginner)
         createDifficultyButton(text: "Medium", position: CGPoint(x: screenCenter.x, y: screenCenter.y + 50), difficulty: .intermediate)
         createDifficultyButton(text: "Hard", position: CGPoint(x: screenCenter.x, y: screenCenter.y - 50), difficulty: .hard)
-        createDifficultyButton(text: "Very Hard", position: CGPoint(x: screenCenter.x, y: screenCenter.y - 150), difficulty: .veryHard)
+        createDifficultyButton(text: "Expert", position: CGPoint(x: screenCenter.x, y: screenCenter.y - 150), difficulty: .veryHard)
 
         let backButton = ButtonNode(text: "Back", position: CGPoint(x: screenCenter.x, y: size.height * 0.1))
         backButton.onTap = { [weak self] in self?.onBack()}
