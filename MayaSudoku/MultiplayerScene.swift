@@ -55,6 +55,17 @@ class MultiplayerScene: SKScene {
             joinGameButton.disable()
         }
         addChild(joinGameButton)
+
+        let backButton = ButtonNode(text: "Back", position: CGPoint(x: screenCenter.x, y: size.height * 0.1))
+        backButton.onTap = { [weak self] in self?.onBack()}
+        addChild(backButton)
+    }
+
+    private func onBack() {
+        let menu = MainMenuScene(size: self.size)
+        menu.scaleMode = .aspectFill
+        let transition = SKTransition.fade(withDuration: 0.5)
+        self.view?.presentScene(menu, transition: transition)
     }
 
     // Create game session
