@@ -3,6 +3,7 @@ import GameKit
 
 let CellSelectionColor = SKColor(red: 0.7, green: 0.85, blue: 1.0, alpha: 1.0)
 let CellSelectionErrorColor = SKColor(red: 1.0, green: 0.4, blue: 0.4, alpha: 1.0)
+let bonusTime = 600 // 10 min
 
 class SudokuScene: SKScene, ScoreDelegate {
     public var difficulty: SudokuBoard.Difficulty = SudokuBoard.Difficulty.beginner
@@ -44,9 +45,13 @@ class SudokuScene: SKScene, ScoreDelegate {
         }
         NotificationCenter.default.removeObserver(self, name: UIApplication.willResignActiveNotification, object: nil)
         NotificationCenter.default.removeObserver(self, name: UIApplication.didBecomeActiveNotification, object: nil)
+        GKAccessPoint.shared.isActive = GKLocalPlayer.local.isAuthenticated
+        print("deinit")
     }
 
     override func didMove(to view: SKView) {
+        GKAccessPoint.shared.isActive = false
+
         NotificationCenter.default.addObserver(self, selector: #selector(pauseTimer), name: UIApplication.willResignActiveNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(resumeTimer), name: UIApplication.didBecomeActiveNotification, object: nil)
 
@@ -174,6 +179,7 @@ class SudokuScene: SKScene, ScoreDelegate {
             addChild(valueLabel!)
         }
 
+
         let bottomColor = UIColor(red: 0.95, green: 0.95, blue: 1.0, alpha: 1.0)
         let topColor = UIColor(red: 0.7, green: 0.85, blue: 1.0, alpha: 1.0)
         let bar = createGradientNode(size: CGSize(width: gridSize, height: 80), topColor: topColor, bottomColor: bottomColor)
@@ -191,13 +197,13 @@ class SudokuScene: SKScene, ScoreDelegate {
                                         unpressed: "notes_black", pressed: "notes_blue",
                                         mode: .toggle)
         notesButton!.position = CGPoint(x: buttonPositionLeft.x, y: buttonPositionLeft.y)
-        notesButton!.action = handleModeButton
+        notesButton!.action = { [weak self] in self?.handleModeButton() }
         addChild(notesButton!)
 
         let quitButton = TextureButtonNode(size: CGSize(width: buttonSize, height: buttonSize),
                                            unpressed: "exit_black", pressed: "exit_blue")
         quitButton.position = CGPoint(x: buttonPositionRight.x, y: buttonPositionRight.y)
-        quitButton.action = handleQuitButton
+        quitButton.action = { [weak self] in self?.handleQuitButton() }
         addChild(quitButton)
 
         // Start timer
@@ -206,7 +212,9 @@ class SudokuScene: SKScene, ScoreDelegate {
     }
 
     private func startTimer() {
-        timer = Timer.scheduledTimer(timeInterval: 1.0, target: self, selector: #selector(updateTimer), userInfo: nil, repeats: true)
+        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+            self?.updateTimer()
+        }
     }
 
     @objc private func updateTimer() {
@@ -421,7 +429,8 @@ class SudokuScene: SKScene, ScoreDelegate {
     }
     private func checkIfGameCompleted() {
         if board!.isSolved() {
-            score.setComplete()
+            score.setComplete(bonus: elapsedTime < bonusTime ? bonusTime - elapsedTime : 0)
+            GameSessionManager.shared.reportScore(score.score, forLevel: self.difficulty)
         }
     }
 
@@ -465,6 +474,7 @@ class SudokuScene: SKScene, ScoreDelegate {
                 selectedCell = cell
                 print(cell.name!)
             } else {
+                print("unselect cell", cell.name!)
                 selectedCell = nil
                 highlightCellsWithVal(val: boardValues[index])
             }
@@ -497,30 +507,34 @@ class SudokuScene: SKScene, ScoreDelegate {
                         print("great success!")
                         score.addPointsForCorrectPlacement()
 
+                        // remove notes for val
+                        for c in SudokuBoard.getCellsToCheck(index: index) {
+                            if var numbers = self.notes[c], numbers.contains(val) {
+                                numbers.removeAll { $0 == val }
+                                self.notes[c] = numbers
+                                self.drawSudokuBoardCell(index: c, value: boardValues[c])
+                            }
+                        }
+
                         // shake visual effect
-                        selectedCell?.zPosition = 3
+                        let cell = selectedCell
+                        cell?.zPosition = 3
+                        selectedCell = nil
+                        print("unselect cell2", cell?.name ?? "")
+
                         let shake = SKAction.sequence([
                             SKAction.run {
-                                // remove notes for val
-                                for c in SudokuBoard.getCellsToCheck(index: index) {
-                                    if var numbers = self.notes[c], numbers.contains(val) {
-                                        numbers.removeAll { $0 == val }
-                                        self.notes[c] = numbers
-                                        self.drawSudokuBoardCell(index: c, value: boardValues[c])
-                                    }
-                                }
                                 self.drawSudokuBoardCell(index: index, value: val)
                                 self.highlightCellsWithVal(val: val)
                             },
                             SKAction.scale(to: 1.2, duration: 0.15),
                             SKAction.scale(to: 1.0, duration: 0.15),
                             SKAction.run {
-                                self.selectedCell?.zPosition = 1
-                                self.selectedCell = nil
+                                cell?.zPosition = 1
                                 //self.highlightCellsWithVal(val: val)
                             }]
                         )
-                        selectedCell?.run(shake)
+                        cell?.run(shake)
                         checkAndRemoveNumbersCells()
                         checkIfGameCompleted()
 
@@ -555,7 +569,6 @@ class SudokuScene: SKScene, ScoreDelegate {
             GameSessionManager.shared.disconnect()
         }
 
-
         let transition = SKTransition.fade(withDuration: 0.5)
         let mainMenuScene = MainMenuScene(size: self.size)
         self.view?.presentScene(mainMenuScene, transition: transition)
@@ -565,11 +578,7 @@ class SudokuScene: SKScene, ScoreDelegate {
         if gameCompleted {
             return
         }
-        if isNotes {
-            isNotes = false
-        } else {
-            isNotes = true
-        }
+        isNotes = notesButton?.getState() ?? false
     }
 
     func scoreDidUpdate(newScore: Int, mistakes: Int, completed: Bool) {
@@ -653,7 +662,7 @@ class SudokuScene: SKScene, ScoreDelegate {
         if !gameCompleted && active == 0 {
             // i'm the last standing player
             gameCompleted = true
-            self.score.setComplete()
+            self.score.setComplete(bonus: elapsedTime < bonusTime ? bonusTime - elapsedTime : 0)
             createFireworks()
             showGameOver(won: true)
         }

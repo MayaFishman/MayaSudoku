@@ -10,7 +10,7 @@ class DifficultyLevelScene: SKScene {
         titleLabel.fontName = "AvenirNext-Bold"
         titleLabel.fontSize = 48
         titleLabel.fontColor = .white
-        titleLabel.position = CGPoint(x: size.width / 2, y: size.height * 0.8)
+        titleLabel.position = CGPoint(x: size.width / 2, y: size.height * 0.75)
         addChild(titleLabel)
 
         let shadowLabel = titleLabel.copy() as! SKLabelNode
@@ -23,10 +23,10 @@ class DifficultyLevelScene: SKScene {
         let screenCenter = CGPoint(x: size.width / 2, y: size.height / 2)
 
         // Create difficulty buttons
-        createDifficultyButton(text: "Easy", position: CGPoint(x: screenCenter.x, y: screenCenter.y + 150), difficulty: .beginner)
-        createDifficultyButton(text: "Medium", position: CGPoint(x: screenCenter.x, y: screenCenter.y + 50), difficulty: .intermediate)
-        createDifficultyButton(text: "Hard", position: CGPoint(x: screenCenter.x, y: screenCenter.y - 50), difficulty: .hard)
-        createDifficultyButton(text: "Expert", position: CGPoint(x: screenCenter.x, y: screenCenter.y - 150), difficulty: .veryHard)
+        createDifficultyButton(text: "Easy", position: CGPoint(x: screenCenter.x, y: screenCenter.y + 120), difficulty: .beginner)
+        createDifficultyButton(text: "Medium", position: CGPoint(x: screenCenter.x, y: screenCenter.y + 20), difficulty: .intermediate)
+        createDifficultyButton(text: "Hard", position: CGPoint(x: screenCenter.x, y: screenCenter.y - 80), difficulty: .hard)
+        createDifficultyButton(text: "Expert", position: CGPoint(x: screenCenter.x, y: screenCenter.y - 180), difficulty: .veryHard)
 
         let backButton = ButtonNode(text: "Back", position: CGPoint(x: screenCenter.x, y: size.height * 0.1))
         backButton.onTap = { [weak self] in self?.onBack()}

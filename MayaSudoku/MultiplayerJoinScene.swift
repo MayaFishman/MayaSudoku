@@ -13,7 +13,7 @@ class MultiplayerJoinScene: SKScene, UIPickerViewDataSource, UIPickerViewDelegat
         titleLabel.fontName = "AvenirNext-Bold"
         titleLabel.fontSize = 48
         titleLabel.fontColor = .white
-        titleLabel.position = CGPoint(x: size.width / 2, y: size.height * 0.8)
+        titleLabel.position = CGPoint(x: size.width / 2, y: size.height * 0.75)
         addChild(titleLabel)
 
         // Prompt for entering code
@@ -110,7 +110,7 @@ class MultiplayerJoinScene: SKScene, UIPickerViewDataSource, UIPickerViewDelegat
     }
 
     private func goBack() {
-        GameSessionManager.shared.cancelSession()
+        GameSessionManager.shared.disconnect()
 
         // Transition back to the previous scene (e.g., MainMenuScene)
         UIView.animate(withDuration: 0.5, animations: {

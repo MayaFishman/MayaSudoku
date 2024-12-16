@@ -69,7 +69,8 @@ class Score {
         timer?.invalidate()
     }
 
-    func setComplete() {
+    func setComplete(bonus: Int = 0) {
+        score += bonus
         complete()
     }
 

@@ -24,6 +24,10 @@ class TextureButtonNode: SKSpriteNode {
         }
     }
 
+    func getState() -> Bool {
+        return currentState == .pressed
+    }
+
     // Initialize with size and mode
     init(size: CGSize, unpressed: String, pressed: String, mode: ButtonMode = .regular) {
         self.unpressedTexture = SKTexture(imageNamed: unpressed)

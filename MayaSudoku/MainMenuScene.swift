@@ -1,7 +1,7 @@
 import SpriteKit
+import GameKit
 
 class MainMenuScene: SKScene {
-
     override func didMove(to view: SKView) {
         backgroundColor = SKColor(red: 0.2, green: 0.2, blue: 0.35, alpha: 1.0)
 
@@ -35,6 +35,17 @@ class MainMenuScene: SKScene {
             self?.startMultiPlayerGame()
         }
         addChild(multiPlayerButton)
+    }
+
+    func getViewController() -> UIViewController? {
+        var responder: UIResponder? = self.view
+        while responder != nil {
+            if let vc = responder as? UIViewController {
+                return vc
+            }
+            responder = responder?.next
+        }
+        return nil
     }
 
     // Start Single Player Game

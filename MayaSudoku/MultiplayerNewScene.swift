@@ -29,7 +29,7 @@ class MultiplayerNewScene: SKScene {
         titleLabel.fontName = "AvenirNext-Regular"
         titleLabel.fontSize = 48
         titleLabel.fontColor = .white
-        titleLabel.position = CGPoint(x: size.width / 2, y: size.height * 0.85)
+        titleLabel.position = CGPoint(x: size.width / 2, y: size.height * 0.75)
         addChild(titleLabel)
 
         // Party Code Label ("Party Code:" in white)
@@ -37,7 +37,7 @@ class MultiplayerNewScene: SKScene {
         partyCodeTextLabel.fontName = "AvenirNext-Regular"
         partyCodeTextLabel.fontSize = 32
         partyCodeTextLabel.fontColor = .white
-        partyCodeTextLabel.position = CGPoint(x: size.width / 2 - 10, y: titleLabel.position.y - 80)
+        partyCodeTextLabel.position = CGPoint(x: size.width / 2 - 10, y: titleLabel.position.y - 120)
         partyCodeTextLabel.horizontalAlignmentMode = .right
 
         // Party Code Value (actual code in yellow)
@@ -62,14 +62,14 @@ class MultiplayerNewScene: SKScene {
         drawPlayerPlaceholders()
 
         // Back Button at the bottom of the screen
-        let backButton = ButtonNode(text: "Back", position: CGPoint(x: size.width / 2, y: size.height * 0.2))
+        let backButton = ButtonNode(text: "Back", position: CGPoint(x: size.width / 2, y: size.height * 0.1))
         backButton.onTap = { [weak self] in
             self?.goBack()
         }
         addChild(backButton)
 
         // Start Button positioned below the player list
-        startButton = ButtonNode(text: "Start", position: CGPoint(x: size.width / 2, y: size.height * 0.75 - 350))
+        startButton = ButtonNode(text: "Start", position: CGPoint(x: size.width / 2, y: size.height * 0.75 - 400))
         startButton.onTap = { [weak self] in
             self?.startGame()
         }
@@ -101,7 +101,7 @@ class MultiplayerNewScene: SKScene {
             let placeholderSlot = SKShapeNode(rectOf: CGSize(width: 300, height: 40), cornerRadius: 10)
             placeholderSlot.fillColor = SKColor(red: 0.6, green: 0.6, blue: 0.6, alpha: 1.0) // Gray color for vacant slots
             placeholderSlot.strokeColor = .clear
-            placeholderSlot.position = CGPoint(x: size.width / 2, y: size.height * 0.75 - 100 - CGFloat(i * 50))
+            placeholderSlot.position = CGPoint(x: size.width / 2, y: size.height * 0.75 - 150 - CGFloat(i * 50))
             placeholderSlot.zPosition = 1
             addChild(placeholderSlot)
             playerSlots.append(placeholderSlot)

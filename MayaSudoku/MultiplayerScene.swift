@@ -2,6 +2,7 @@ import SpriteKit
 import GameKit
 
 class MultiplayerScene: SKScene {
+
     let gameSession = GameSessionManager.shared
     private var createGameButton: ButtonNode!
     private var joinGameButton: ButtonNode!

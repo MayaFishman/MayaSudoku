@@ -1,7 +1,7 @@
 import Foundation
 import MultipeerConnectivity
 
-let service = "sudoko-p2p"
+let service = "sudoku-p2p"
 
 class PeerManager: NSObject, MCSessionDelegate, MCNearbyServiceAdvertiserDelegate, MCNearbyServiceBrowserDelegate {
     var peerID: MCPeerID!

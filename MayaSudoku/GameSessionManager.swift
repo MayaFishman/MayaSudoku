@@ -228,6 +228,10 @@ class GameSessionManager: NSObject, GKMatchDelegate, GKLocalPlayerListener {
                     )
                 }
             } else if msg == "scoreChanged" {
+                if !matchPlayers.contains(where: { $0.gamePlayerID == player.gamePlayerID }) {
+                    print("received data from unconnected player", player)
+                    return
+                }
                 let score = jsonDict["score"] as! Int
                 let mistakes = jsonDict["mistakes"] as! Int
                 let isComplete = jsonDict["complete"] as! Bool
@@ -265,6 +269,32 @@ class GameSessionManager: NSObject, GKMatchDelegate, GKLocalPlayerListener {
     func disconnect() {
         match?.disconnect()
         match?.delegate = nil
+    }
+
+    func reportScore(_ score: Int, forLevel: SudokuBoard.Difficulty) {
+        if !GKLocalPlayer.local.isAuthenticated {
+            return
+        }
+        var leaderboardID: String
+        switch forLevel {
+        case .beginner:
+            leaderboardID = "EASY_LEADERBOARD"
+        case .intermediate:
+            leaderboardID = "MEDIUMLEADERBOARD"
+        case .hard:
+            leaderboardID = "HEAD_LEADERBOARD"
+        case .veryHard:
+            leaderboardID = "EXPERT_LEADERBOARD"
+        }
+
+        GKLeaderboard.submitScore(score, context: 0, player: GKLocalPlayer.local,
+                                  leaderboardIDs: [leaderboardID], completionHandler: { error in
+            if let error = error {
+                print("Error submitting score: \(error.localizedDescription)")
+            } else {
+                print("Score submitted successfully using GKLeaderboardScore")
+            }
+        })
     }
 
     // MARK: - GKLocalPlayerListener Method for accepting invitations
