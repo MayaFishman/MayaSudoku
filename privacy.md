@@ -14,7 +14,7 @@ The game uses Apple's **GameKit** framework to provide leaderboards and multipla
 Aside from Apple's GameKit for leaderboards, the game does not use any third-party services that collect or process your data.
 
 ## Contact Us
-If you have any questions about this Privacy Policy, feel free to contact us at here(https://github.com/MayaFishman/MayaSudoku/issues/).
+If you have any questions about this Privacy Policy, feel free to contact us at [here](https://github.com/MayaFishman/MayaSudoku/issues/).
 
 **By using the game, you agree to this Privacy Policy.**
 
